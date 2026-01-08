@@ -15,14 +15,52 @@ import {
   Info, Zap, Skull, Bell, Volume2, ShieldAlert, Settings, Sliders, VolumeX
 } from 'lucide-react';
 
+const INITIAL_CHARACTERS: Character[] = [
+  {
+    id: 'char-1',
+    name: 'Jax "Voltage" Thorne',
+    role: 'Master Infiltrator',
+    description: 'Expert hacker with a history of high-profile data heists. Fast on his feet, faster on a terminal.',
+    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1000&auto=format&fit=crop',
+    stats: { driving: 85, shooting: 70, hacking: 98, strength: 60 }
+  },
+  {
+    id: 'char-2',
+    name: 'Kira "Viper" Sato',
+    role: 'Tactical Enforcer',
+    description: 'Ex-military specialist trained in urban warfare. If things get loud, she’s the one you want on point.',
+    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop',
+    stats: { driving: 70, shooting: 95, hacking: 40, strength: 88 }
+  }
+];
+
+const INITIAL_CARS: Car[] = [
+  {
+    id: 'car-1',
+    model: 'Overdrive Zenith',
+    class: 'Hypercar',
+    description: 'Aerodynamic masterpiece built for absolute velocity. Features a prototype nitro injection system.',
+    imageUrl: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?q=80&w=1000&auto=format&fit=crop',
+    stats: { speed: 98, handling: 92, armor: 45 }
+  },
+  {
+    id: 'car-2',
+    model: 'Ironclad Juggernaut',
+    class: 'Armored SUV',
+    description: 'Modified tactical response vehicle. Replaced luxury with heavy-duty plating and bulletproof glass.',
+    imageUrl: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=1000&auto=format&fit=crop',
+    stats: { speed: 55, handling: 60, armor: 95 }
+  }
+];
+
 const INITIAL_MISSIONS: Mission[] = [
   { id: 'm1', title: 'Silicon Ghost', type: 'Stealth', difficulty: 'Medium', reward: 450000, hook: 'Infiltrate the server farm and inject a logic bomb.', objectives: ['Bypass scanners', 'Avoid detection', 'Extract data'], status: 'available' },
 ];
 
 const App: React.FC = () => {
   const [view, setView] = useState<GameView>('dashboard');
-  const [characters, setCharacters] = useState<Character[]>([]);
-  const [cars, setCars] = useState<Car[]>([]);
+  const [characters, setCharacters] = useState<Character[]>(INITIAL_CHARACTERS);
+  const [cars, setCars] = useState<Car[]>(INITIAL_CARS);
   const [missions, setMissions] = useState<Mission[]>(INITIAL_MISSIONS);
   const [balance, setBalance] = useState(15420930);
   const [level, setLevel] = useState(14);
@@ -378,11 +416,11 @@ const App: React.FC = () => {
           {view === 'missions' && (
             <MissionView 
               missions={missions} characters={characters} onAccept={handleAcceptMission} onResolveEvent={() => {}} 
-              onGenerateMission={async (t) => {
+              onGenerateMission={async (t, type, difficulty) => {
                 playSFX('click');
                 setIsGeneratingMission(true);
                 try {
-                  const m = await generateMissionDescription(t);
+                  const m = await generateMissionDescription(t, type, difficulty);
                   setMissions(prev => [{ ...m, id: Math.random().toString(), status: 'available' }, ...prev]);
                   addLog(`Contract generated: ${m.title}`);
                 } catch(e) { addLog("Gen failed: Signal lost."); }

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, User, Car, Target, TrendingUp, Heart, Zap, Shield } from 'lucide-react';
+import { X, User, Car, Target, TrendingUp, Heart, Zap, Shield, Star, Award } from 'lucide-react';
 
 interface TutorialModalProps {
   onClose: () => void;
@@ -55,11 +55,11 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ onClose }) => {
 
           <div className="space-y-4">
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400"><TrendingUp /></div>
-              <h3 className="font-orbitron font-black text-xl italic uppercase tracking-tighter">4. Prestige Tiers</h3>
+              <div className="p-3 bg-purple-500/10 rounded-2xl text-purple-400"><Award /></div>
+              <h3 className="font-orbitron font-black text-xl italic uppercase tracking-tighter">4. Prestige Levels</h3>
             </div>
             <p className="text-zinc-400 text-sm leading-relaxed">
-              Completed missions can be <span className="text-purple-400 font-bold">Replayed</span> at higher Prestige Tiers. Difficulty increases, but the rewards and XP multiply. Master a sector to rule the city.
+              Successfully completing a contract unlocks <span className="text-purple-400 font-bold">Prestige Levels</span>. Replaying a mission at a higher Prestige Tier increases enemy lethality and reduces tactical windows, but provides <span className="text-emerald-400 font-bold">exponential reward multipliers</span> and exclusive syndicate XP.
             </p>
           </div>
         </div>
@@ -71,7 +71,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ onClose }) => {
           <ul className="space-y-3 text-xs font-mono text-zinc-500">
             <li className="flex gap-3"><span className="text-red-500">!!</span> Watch the <span className="text-red-400">CRITICAL WINDOW</span> timer. Extraction is impossible if it hits zero.</li>
             <li className="flex gap-3"><span className="text-red-500">!!</span> Heat Level (Notoriety) increases with failures. High Heat makes the HUD unstable.</li>
-            <li className="flex gap-3"><span className="text-red-500">!!</span> Low on funds? The Syndicate will issue a <span className="text-emerald-400">$25,000 grant</span> if your balance is critical.</li>
+            <li className="flex gap-3"><span className="text-red-500">!!</span> Reaching <span className="text-purple-400">Prestige V</span> on any contract marks you as a local legend, reducing police response times in that sector.</li>
           </ul>
         </div>
 

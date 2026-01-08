@@ -4,7 +4,7 @@ import { Mission, Character } from '../types';
 import { 
   Database, Eye, Swords, Car, Target, Loader2, 
   ChevronRight, CheckCircle2, XCircle, Clock, 
-  Heart, Activity, Binary, AlertCircle, Users, Sparkles, RefreshCcw
+  Heart, Activity, Binary, AlertCircle, Users, Sparkles, RefreshCcw, Shield
 } from 'lucide-react';
 
 interface MissionViewProps {
@@ -12,7 +12,7 @@ interface MissionViewProps {
   characters: Character[];
   onAccept: (id: string, characterId: string) => void;
   onResolveEvent: (missionId: string, optionIndex: number) => void;
-  onGenerateMission: (theme: string) => void;
+  onGenerateMission: (theme: string, type: string, difficulty: string) => void;
   isGenerating: boolean;
   onShowTutorial: () => void;
   onReplay: (id: string) => void;
@@ -23,6 +23,8 @@ const MissionView: React.FC<MissionViewProps> = ({
 }) => {
   const [selectedChar, setSelectedChar] = useState<Record<string, string>>({});
   const [customTheme, setCustomTheme] = useState('');
+  const [selectedType, setSelectedType] = useState<Mission['type']>('Heist');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<Mission['difficulty']>('Medium');
 
   const getIcon = (type: Mission['type']) => {
     switch (type) {
@@ -35,9 +37,12 @@ const MissionView: React.FC<MissionViewProps> = ({
     }
   };
 
+  const missionTypes: Mission['type'][] = ['Heist', 'Stealth', 'Combat', 'Driving', 'Hacking'];
+  const difficulties: Mission['difficulty'][] = ['Low', 'Medium', 'High', 'Extreme', 'Legendary'];
+
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700 h-full flex flex-col pb-20">
-      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
+      <header className="flex flex-col gap-6">
         <div>
           <h2 className="text-5xl font-orbitron font-black italic tracking-tighter uppercase">CONTRACT <span className="text-red-600">FEED</span></h2>
           <div className="flex gap-4 items-center mt-2">
@@ -45,21 +50,57 @@ const MissionView: React.FC<MissionViewProps> = ({
           </div>
         </div>
         
-        <div className="flex gap-2 w-full lg:w-auto">
-          <input 
-            type="text" 
-            placeholder="Custom Operation Theme..."
-            className="flex-1 lg:w-80 bg-zinc-900 border border-zinc-800 rounded-2xl px-5 py-3 text-xs focus:outline-none focus:border-cyan-500 shadow-inner"
-            value={customTheme}
-            onChange={(e) => setCustomTheme(e.target.value)}
-          />
-          <button 
-            disabled={isGenerating || !customTheme}
-            onClick={() => { onGenerateMission(customTheme); setCustomTheme(''); }}
-            className="bg-cyan-500 hover:bg-cyan-400 disabled:bg-zinc-800 text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center gap-2 transition-all active:scale-95"
-          >
-            {isGenerating ? <Loader2 className="animate-spin" size={14} /> : <><Sparkles size={14} /> GENERATE</>}
-          </button>
+        <div className="glass p-6 rounded-[2.5rem] border border-white/5 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-2 flex items-center gap-2">
+                <Sparkles size={12} /> OP_THEME
+              </label>
+              <input 
+                type="text" 
+                placeholder="The Big Score..."
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-5 py-3 text-xs focus:outline-none focus:border-cyan-500 shadow-inner"
+                value={customTheme}
+                onChange={(e) => setCustomTheme(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-2 flex items-center gap-2">
+                <Shield size={12} /> TYPE
+              </label>
+              <select 
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value as Mission['type'])}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-5 py-3 text-xs focus:outline-none focus:border-cyan-500 shadow-inner text-zinc-300 appearance-none cursor-pointer"
+              >
+                {missionTypes.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-2 flex items-center gap-2">
+                <Activity size={12} /> DIFFICULTY
+              </label>
+              <select 
+                value={selectedDifficulty}
+                onChange={(e) => setSelectedDifficulty(e.target.value as Mission['difficulty'])}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-5 py-3 text-xs focus:outline-none focus:border-cyan-500 shadow-inner text-zinc-300 appearance-none cursor-pointer"
+              >
+                {difficulties.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+
+            <div className="flex items-end">
+              <button 
+                disabled={isGenerating || !customTheme}
+                onClick={() => { onGenerateMission(customTheme, selectedType, selectedDifficulty); setCustomTheme(''); }}
+                className="w-full bg-cyan-500 hover:bg-cyan-400 disabled:bg-zinc-800 text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95"
+              >
+                {isGenerating ? <Loader2 className="animate-spin" size={14} /> : <><Sparkles size={14} /> INITIALIZE GENERATION</>}
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 

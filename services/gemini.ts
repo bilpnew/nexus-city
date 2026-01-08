@@ -2,11 +2,8 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 
 const getAI = () => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing API_KEY in process.env");
-  }
-  return new GoogleGenAI({ apiKey });
+  // Use the API key directly from the environment as mandated.
+  return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 };
 
 export const generateCharacterImage = async (prompt: string) => {
@@ -57,12 +54,17 @@ export const generateCarImage = async (prompt: string) => {
   }
 };
 
-export const generateMissionDescription = async (theme: string) => {
+export const generateMissionDescription = async (theme: string, type: string, difficulty: string) => {
   const ai = getAI();
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Generate a GTA mission theme: ${theme}. Output JSON only.`,
+      contents: `Generate a high-stakes GTA mission theme. 
+      Theme: ${theme}
+      Requested Type: ${type}
+      Requested Difficulty: ${difficulty}
+      
+      The mission must reflect the specified type and difficulty in its objectives and hook. Output JSON only.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -71,8 +73,8 @@ export const generateMissionDescription = async (theme: string) => {
             title: { type: Type.STRING },
             hook: { type: Type.STRING },
             objectives: { type: Type.ARRAY, items: { type: Type.STRING } },
-            difficulty: { type: Type.STRING },
-            type: { type: Type.STRING },
+            difficulty: { type: Type.STRING, description: "Must match the requested difficulty" },
+            type: { type: Type.STRING, description: "Must match the requested mission type" },
             reward: { type: Type.NUMBER }
           },
           required: ["title", "hook", "objectives", "difficulty", "type", "reward"]
