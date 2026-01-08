@@ -5,6 +5,83 @@ const getAI = () => {
   return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 };
 
+export const generateCharacterData = async (userPrompt: string) => {
+  const ai = getAI();
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Generate a high-detail criminal operative profile based on this concept: "${userPrompt}". 
+      Provide a cool name, a specific criminal role, detailed attributes, and a descriptive prompt for an image generator. 
+      Output JSON only.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            name: { type: Type.STRING },
+            role: { type: Type.STRING },
+            description: { type: Type.STRING },
+            stats: {
+              type: Type.OBJECT,
+              properties: {
+                driving: { type: Type.NUMBER },
+                shooting: { type: Type.NUMBER },
+                hacking: { type: Type.NUMBER },
+                strength: { type: Type.NUMBER }
+              },
+              required: ["driving", "shooting", "hacking", "strength"]
+            },
+            imagePrompt: { type: Type.STRING, description: "Detailed visual description for an image AI" }
+          },
+          required: ["name", "role", "description", "stats", "imagePrompt"]
+        }
+      }
+    });
+    return JSON.parse(response.text);
+  } catch (error) {
+    console.error("Character Metadata Error:", error);
+    throw error;
+  }
+};
+
+export const generateCarData = async (userPrompt: string) => {
+  const ai = getAI();
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Generate technical specs for a custom illegal street racing vehicle based on: "${userPrompt}". 
+      Provide a model name, a vehicle class, performance stats, and a cinematic image prompt. 
+      Output JSON only.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            model: { type: Type.STRING },
+            class: { type: Type.STRING },
+            description: { type: Type.STRING },
+            stats: {
+              type: Type.OBJECT,
+              properties: {
+                speed: { type: Type.NUMBER },
+                handling: { type: Type.NUMBER },
+                armor: { type: Type.NUMBER }
+              },
+              required: ["speed", "handling", "armor"]
+            },
+            imagePrompt: { type: Type.STRING, description: "Cinematic visual description for an image AI" }
+          },
+          required: ["model", "class", "description", "stats", "imagePrompt"]
+        }
+      }
+    });
+    return JSON.parse(response.text);
+  } catch (error) {
+    console.error("Car Metadata Error:", error);
+    throw error;
+  }
+};
+
 export const generateCharacterImage = async (prompt: string) => {
   const ai = getAI();
   try {
@@ -56,9 +133,8 @@ export const generateCarImage = async (prompt: string) => {
 export const generateMissionDescription = async (theme: string, type: string, difficulty: string) => {
   const ai = getAI();
   try {
-    // Using gemini-flash-lite-latest for fast, efficient "free-tier" optimized generation
     const response = await ai.models.generateContent({
-      model: 'gemini-flash-lite-latest',
+      model: 'gemini-3-flash-preview',
       contents: `Generate a high-stakes GTA mission theme. 
       Theme: ${theme}
       Requested Type: ${type}
@@ -114,10 +190,8 @@ export const generateBriefingAudio = async (text: string) => {
 };
 
 export const generateMissionVideo = async (mission: any, updateStatus: (msg: string) => void): Promise<string> => {
-  // Always create a new instance right before use to ensure latest key is used
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
-  
-  updateStatus("Initializing neural renderer...");
+  updateStatus("Initializing best neural renderer...");
   let operation = await ai.models.generateVideos({
     model: 'veo-3.1-fast-generate-preview',
     prompt: `Cinematic AAA game action replay of a ${mission.type} mission titled "${mission.title}". ${mission.hook}. High-speed car chase, neon lights, gritty urban atmosphere, explosive action. GTA V style aesthetic.`,
@@ -146,6 +220,5 @@ export const generateMissionVideo = async (mission: any, updateStatus: (msg: str
 
   const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
   if (!downloadLink) throw new Error("Video generation failed.");
-  
   return `${downloadLink}&key=${process.env.API_KEY}`;
 };

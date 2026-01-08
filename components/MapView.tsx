@@ -15,12 +15,34 @@ interface MapNode {
 }
 
 const MAP_NODES: MapNode[] = [
+  // Sector 1: Downtown / Financial
   { id: 'sh1', type: 'safehouse', name: 'Downtown Penthouse', pos: { x: 35, y: 25 }, status: 'OPTIMAL', intel: 'Primary logistics hub. 2 fleet units ready.', risk: 'Low' },
+  { id: 'tgt1', type: 'target', name: 'Vantage Casino', pos: { x: 42, y: 28 }, status: 'ACTIVE', intel: 'Vault contains $2.5M in bearer bonds.', risk: 'Extreme', payout: '$2,500,000' },
+  { id: 'nd1', type: 'node', name: 'Main Exchange', pos: { x: 38, y: 20 }, status: 'STABLE', intel: 'Central fiber hub for the city.', risk: 'Medium' },
+  { id: 'tgt5', type: 'target', name: 'Global Finance Tower', pos: { x: 45, y: 15 }, status: 'ACTIVE', intel: 'High-level server farm access.', risk: 'High', payout: '$1,800,000' },
+  
+  // Sector 2: The Docks / Industrial
   { id: 'sh2', type: 'safehouse', name: 'The Docks Cache', pos: { x: 80, y: 70 }, status: 'SECURE', intel: 'Secondary extraction point. Stealth specialized.', risk: 'Medium' },
-  { id: 'tgt1', type: 'target', name: 'Vantage Casino', pos: { x: 65, y: 30 }, status: 'ACTIVE', intel: 'Vault contains $2.5M in bearer bonds.', risk: 'Extreme', payout: '$2,500,000' },
-  { id: 'tgt2', type: 'target', name: 'Union Depository', pos: { x: 20, y: 60 }, status: 'ACTIVE', intel: 'High-security transport incoming at 0400.', risk: 'High', payout: '$1,200,000' },
-  { id: 'tgt3', type: 'target', name: 'Zancudo Hangar', pos: { x: 15, y: 20 }, status: 'ACTIVE', intel: 'Military hardware heist. Heavy armor required.', risk: 'Extreme', payout: '$4,800,000' },
-  { id: 'nd1', type: 'node', name: 'Signal Jammer B4', pos: { x: 50, y: 50 }, status: 'STABLE', intel: 'Encryption node. Vulnerable to signal loss.', risk: 'Medium' },
+  { id: 'tgt2', type: 'target', name: 'Union Depository', pos: { x: 75, y: 75 }, status: 'ACTIVE', intel: 'High-security transport incoming at 0400.', risk: 'High', payout: '$1,200,000' },
+  { id: 'tgt6', type: 'target', name: 'Steel Mill Storage', pos: { x: 85, y: 80 }, status: 'ACTIVE', intel: 'Rare industrial chemicals cache.', risk: 'Medium', payout: '$600,000' },
+  { id: 'nd2', type: 'node', name: 'Dockside Relay', pos: { x: 70, y: 65 }, status: 'OFFLINE', intel: 'Needs remote reboot to bypass port security.', risk: 'Low' },
+
+  // Sector 3: North Mountains / Military Outskirts
+  { id: 'sh3', type: 'safehouse', name: 'Mountain Lodge', pos: { x: 15, y: 10 }, status: 'SECURE', intel: 'Remote retreat for high-heat cooldown.', risk: 'Low' },
+  { id: 'tgt3', type: 'target', name: 'Zancudo Hangar', pos: { x: 10, y: 15 }, status: 'ACTIVE', intel: 'Military hardware heist. Heavy armor required.', risk: 'Extreme', payout: '$4,800,000' },
+  { id: 'tgt7', type: 'target', name: 'Research Lab Omega', pos: { x: 20, y: 5 }, status: 'ACTIVE', intel: 'Bio-tech prototype data.', risk: 'High', payout: '$2,100,000' },
+  { id: 'nd3', type: 'node', name: 'Satellite Uplink', pos: { x: 5, y: 5 }, status: 'STABLE', intel: 'Military-grade encryption override.', risk: 'High' },
+
+  // Sector 4: The Slums / Cyber-Hub
+  { id: 'sh4', type: 'safehouse', name: 'Neon Alley Basement', pos: { x: 60, y: 50 }, status: 'ACTIVE', intel: 'Small but undetectable. Good for hacking jobs.', risk: 'Medium' },
+  { id: 'tgt4', type: 'target', name: 'Cyber-Barrens Node', pos: { x: 65, y: 45 }, status: 'ACTIVE', intel: 'Illegal crypto mining farm.', risk: 'Medium', payout: '$950,000' },
+  { id: 'tgt8', type: 'target', name: 'The Grid Club', pos: { x: 55, y: 55 }, status: 'ACTIVE', intel: 'Black market deal hub.', risk: 'High', payout: '$1,100,000' },
+  { id: 'nd4', type: 'node', name: 'Sub-Net Access', pos: { x: 50, y: 48 }, status: 'STABLE', intel: 'Entry point for local cyber-grid.', risk: 'Low' },
+
+  // Central Hub / Crossroads
+  { id: 'nd5', type: 'node', name: 'Signal Jammer B4', pos: { x: 50, y: 50 }, status: 'STABLE', intel: 'Encryption node. Vulnerable to signal loss.', risk: 'Medium' },
+  { id: 'tgt9', type: 'target', name: 'Central Transit Hub', pos: { x: 48, y: 52 }, status: 'ACTIVE', intel: 'Massive cash shipment transit.', risk: 'Extreme', payout: '$3,500,000' },
+  { id: 'tgt10', type: 'target', name: 'Police Plaza (Infiltration)', pos: { x: 52, y: 48 }, status: 'ACTIVE', intel: 'Recover sensitive criminal files.', risk: 'Extreme', payout: '$5,000,000' },
 ];
 
 const MapView: React.FC = () => {
