@@ -2,7 +2,6 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 
 const getAI = () => {
-  // Use the API key directly from the environment as mandated.
   return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 };
 
@@ -57,8 +56,9 @@ export const generateCarImage = async (prompt: string) => {
 export const generateMissionDescription = async (theme: string, type: string, difficulty: string) => {
   const ai = getAI();
   try {
+    // Using gemini-flash-lite-latest for fast, efficient "free-tier" optimized generation
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-flash-lite-latest',
       contents: `Generate a high-stakes GTA mission theme. 
       Theme: ${theme}
       Requested Type: ${type}
@@ -111,4 +111,41 @@ export const generateBriefingAudio = async (text: string) => {
     console.error("TTS Error:", error);
     throw error;
   }
+};
+
+export const generateMissionVideo = async (mission: any, updateStatus: (msg: string) => void): Promise<string> => {
+  // Always create a new instance right before use to ensure latest key is used
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  
+  updateStatus("Initializing neural renderer...");
+  let operation = await ai.models.generateVideos({
+    model: 'veo-3.1-fast-generate-preview',
+    prompt: `Cinematic AAA game action replay of a ${mission.type} mission titled "${mission.title}". ${mission.hook}. High-speed car chase, neon lights, gritty urban atmosphere, explosive action. GTA V style aesthetic.`,
+    config: {
+      numberOfVideos: 1,
+      resolution: '720p',
+      aspectRatio: '16:9'
+    }
+  });
+
+  const statusMessages = [
+    "Synthesizing volumetric lighting...",
+    "Simulating vehicle physics...",
+    "Processing security footage artifacts...",
+    "Encoding cinematic transitions...",
+    "Finalizing neural stream..."
+  ];
+
+  let i = 0;
+  while (!operation.done) {
+    updateStatus(statusMessages[i % statusMessages.length]);
+    i++;
+    await new Promise(resolve => setTimeout(resolve, 8000));
+    operation = await ai.operations.getVideosOperation({ operation: operation });
+  }
+
+  const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+  if (!downloadLink) throw new Error("Video generation failed.");
+  
+  return `${downloadLink}&key=${process.env.API_KEY}`;
 };

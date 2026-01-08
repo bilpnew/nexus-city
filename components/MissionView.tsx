@@ -4,7 +4,7 @@ import { Mission, Character } from '../types';
 import { 
   Database, Eye, Swords, Car, Target, Loader2, 
   ChevronRight, CheckCircle2, XCircle, Clock, 
-  Heart, Activity, Binary, AlertCircle, Users, Sparkles, RefreshCcw, Shield
+  Heart, Activity, Binary, AlertCircle, Users, Sparkles, RefreshCcw, Shield, Play, Share2
 } from 'lucide-react';
 
 interface MissionViewProps {
@@ -13,13 +13,14 @@ interface MissionViewProps {
   onAccept: (id: string, characterId: string) => void;
   onResolveEvent: (missionId: string, optionIndex: number) => void;
   onGenerateMission: (theme: string, type: string, difficulty: string) => void;
+  onWatchReplay: (mission: Mission) => void;
   isGenerating: boolean;
   onShowTutorial: () => void;
   onReplay: (id: string) => void;
 }
 
 const MissionView: React.FC<MissionViewProps> = ({ 
-  missions, characters, onAccept, onResolveEvent, onGenerateMission, isGenerating, onShowTutorial, onReplay 
+  missions, characters, onAccept, onResolveEvent, onGenerateMission, onWatchReplay, isGenerating, onShowTutorial, onReplay 
 }) => {
   const [selectedChar, setSelectedChar] = useState<Record<string, string>>({});
   const [customTheme, setCustomTheme] = useState('');
@@ -172,7 +173,7 @@ const MissionView: React.FC<MissionViewProps> = ({
                           <span>{Math.floor(mission.progress || 0)}%</span>
                         </div>
                         <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden border border-white/5">
-                          <div className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 transition-all duration-500" style={{ width: `${mission.progress}%` }} />
+                          <div className="h-full bg- gradient-to-r from-cyan-600 to-cyan-400 transition-all duration-500" style={{ width: `${mission.progress}%` }} />
                         </div>
                       </div>
                     </div>
@@ -234,13 +235,24 @@ const MissionView: React.FC<MissionViewProps> = ({
                 </button>
               )}
               {mission.status === 'completed' && (
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex flex-col items-end gap-3">
                    <div className="text-emerald-500 flex items-center gap-2 font-black text-[10px]"><CheckCircle2 size={16} /> SUCCESS</div>
-                   <button onClick={() => onReplay(mission.id)} className="text-[10px] font-black text-purple-400 flex items-center gap-2 hover:text-white transition-colors"><RefreshCcw size={14} /> REPLAY</button>
+                   <div className="flex gap-2">
+                      <button 
+                        onClick={() => onWatchReplay(mission)}
+                        className="p-3 bg-cyan-500 text-black rounded-xl hover:bg-white transition-all shadow-lg shadow-cyan-500/20"
+                        title="AI Action Replay"
+                      >
+                        <Play size={14} fill="currentColor" />
+                      </button>
+                      <button onClick={() => onReplay(mission.id)} className="p-3 bg-zinc-900 border border-white/5 text-zinc-500 rounded-xl hover:text-white transition-all">
+                        <RefreshCcw size={14} />
+                      </button>
+                   </div>
                 </div>
               )}
               {mission.status === 'failed' && (
-                <div className="flex flex-col items-end gap-2 text-red-500">
+                <div className="flex flex-col items-end gap-3 text-red-500">
                    <div className="flex items-center gap-2 font-black text-[10px]"><XCircle size={16} /> BOTCHED</div>
                    <button onClick={() => onReplay(mission.id)} className="text-[10px] font-black text-zinc-500 flex items-center gap-2 hover:text-white transition-colors"><RefreshCcw size={14} /> RETRY</button>
                 </div>

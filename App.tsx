@@ -8,11 +8,13 @@ import MapView from './components/MapView';
 import MissionView from './components/MissionView';
 import TerminalView from './components/TerminalView';
 import TutorialModal from './components/TutorialModal';
+import VideoReplayModal from './components/VideoReplayModal';
 import { Character, Car, GameView, Mission, TacticalEvent } from './types';
-import { generateMissionDescription, generateBriefingAudio } from './services/gemini';
+import { generateMissionDescription, generateBriefingAudio, generateMissionVideo } from './services/gemini';
 import { 
   Trophy, Wifi, Activity, Terminal as TerminalIcon, 
-  Info, Zap, Skull, Bell, Volume2, ShieldAlert, Settings, Sliders, VolumeX
+  Info, Zap, Skull, Bell, Volume2, ShieldAlert, Settings, Sliders, VolumeX,
+  Lock, Key, ExternalLink, Cpu
 } from 'lucide-react';
 
 const INITIAL_CHARACTERS: Character[] = [
@@ -55,9 +57,40 @@ const INITIAL_CARS: Car[] = [
 
 const INITIAL_MISSIONS: Mission[] = [
   { id: 'm1', title: 'Silicon Ghost', type: 'Stealth', difficulty: 'Medium', reward: 450000, hook: 'Infiltrate the server farm and inject a logic bomb.', objectives: ['Bypass scanners', 'Avoid detection', 'Extract data'], status: 'available' },
+  { id: 'm2', title: 'Neon Blitz', type: 'Driving', difficulty: 'Low', reward: 120000, hook: 'Deliver the high-value cargo through the downtown expressway.', objectives: ['Keep speed above 80', 'Avoid roadblocks', 'Reach drop point'], status: 'available' },
+  { id: 'm3', title: 'Iron Rain', type: 'Combat', difficulty: 'High', reward: 780000, hook: 'Assault the private military convoy and seize the hardware.', objectives: ['Disable escorts', 'Hijack the truck', 'Hold off reinforcements'], status: 'available' },
+  { id: 'm4', title: 'The Vault Breaker', type: 'Heist', difficulty: 'Extreme', reward: 2500000, hook: 'Bypass the layers of security at the Central Bank of Nexus.', objectives: ['Drill vault door', 'Neutralize alarms', 'Secure the gold'], status: 'available' },
+  { id: 'm5', title: 'Digital Mirage', type: 'Hacking', difficulty: 'Medium', reward: 350000, hook: 'Siphon funds from a corporate shell account.', objectives: ['Bypass firewall', 'Decrypt keys', 'Route funds through safe nodes'], status: 'available' },
+  { id: 'm6', title: 'Viper Drive', type: 'Driving', difficulty: 'Medium', reward: 520000, hook: 'Escape the high-speed pursuit in the rain-slicked docks.', objectives: ['Lose the tail', 'Navigate the container maze', 'Find the hideout'], status: 'available' },
+  { id: 'm7', title: 'Shadow Protocol', type: 'Stealth', difficulty: 'High', reward: 900000, hook: 'Plant a bug in the CEO\'s penthouse during a gala.', objectives: ['Infiltrate dressed as staff', 'Access the terminal', 'Exit unnoticed'], status: 'available' },
+  { id: 'm8', title: 'Frontline Fury', type: 'Combat', difficulty: 'Medium', reward: 410000, hook: 'Defend the safehouse from a rival syndicate hit squad.', objectives: ['Secure perimeters', 'Eliminate attackers', 'Protect the data server'], status: 'available' },
+  { id: 'm9', title: 'The Apex Score', type: 'Heist', difficulty: 'Legendary', reward: 5000000, hook: 'The ultimate heist. Steal the "Apex" core from the orbital elevator.', objectives: ['Board the lift', 'Bypass AI sentinels', 'Extraction via paraglider'], status: 'available' },
+  { id: 'm10', title: 'Binary Soul', type: 'Hacking', difficulty: 'Low', reward: 95000, hook: 'Recover a deleted memory chip from a scrapyard terminal.', objectives: ['Locate terminal', 'Restore power', 'Transfer data'], status: 'available' },
+  { id: 'm11', title: 'Asphalt Assassin', type: 'Driving', difficulty: 'High', reward: 650000, hook: 'Takedown a rival racer and steal their prototype engine.', objectives: ['Pit maneuver target', 'Disable vehicle', 'Tow to garage'], status: 'available' },
+  { id: 'm12', title: 'Ghost in the Machine', type: 'Stealth', difficulty: 'Extreme', reward: 1100000, hook: 'Sabotage the city power grid without leaving a trace.', objectives: ['Cut sub-station power', 'Evade thermal drones', 'Synchronized shutdown'], status: 'available' },
+  { id: 'm13', title: 'Deadly Horizon', type: 'Combat', difficulty: 'High', reward: 820000, hook: 'Intercept a drone shipment in the mid-town canyon.', objectives: ['Snatch drone controllers', 'Repel airborne units', 'Secure cargo'], status: 'available' },
+  { id: 'm14', title: 'The Gilded Cage', type: 'Heist', difficulty: 'High', reward: 1400000, hook: 'Loot the private art gallery of a corrupt senator.', objectives: ['Disable lasers', 'Switch paintings', 'Exfiltrate through vents'], status: 'available' },
+  { id: 'm15', title: 'Circuit Breaker', type: 'Hacking', difficulty: 'Extreme', reward: 1800000, hook: 'Initiate a global bank holiday by freezing the transaction ledger.', objectives: ['Crack quantum encryption', 'Redirect satellites', 'Lockdown admin access'], status: 'available' },
+  { id: 'm16', title: 'Midnight Run', type: 'Driving', difficulty: 'Low', reward: 80000, hook: 'Deliver a package to the underground clinic.', objectives: ['Avoid police scan', 'Maintain stealth', 'Drop at back alley'], status: 'available' },
+  { id: 'm17', title: 'Steel Sentinel', type: 'Combat', difficulty: 'Legendary', reward: 3200000, hook: 'Takedown the "Sentinel" walker guarding the corporate plaza.', objectives: ['Target weak points', 'Jam communications', 'Demolition of chassis'], status: 'available' },
+  { id: 'm18', title: 'Obsidian Night', type: 'Stealth', difficulty: 'Medium', reward: 380000, hook: 'Tail a dirty cop and record the transaction.', objectives: ['Stay in range', 'Maintain low profile', 'Record audio'], status: 'available' },
+  { id: 'm19', title: 'The Diamond Knot', type: 'Heist', difficulty: 'Medium', reward: 550000, hook: 'Rob the armored jeweler transit at the traffic light.', objectives: ['Timed interception', 'Bust open rear doors', 'Quick getaway'], status: 'available' },
+  { id: 'm20', title: 'Cyber Surge', type: 'Hacking', difficulty: 'High', reward: 720000, hook: 'Upload a virus to the police surveillance network.', objectives: ['Access tower node', 'Maintain uplink', 'Wipe logs'], status: 'available' },
+  { id: 'm21', title: 'Velocity Limit', type: 'Driving', difficulty: 'Extreme', reward: 1350000, hook: 'Transport an unstable reactor across the city before it detonates.', objectives: ['No collisions', 'Maintain high speed', 'Cooldown drop'], status: 'available' },
+  { id: 'm22', title: 'Blood & Chrome', type: 'Combat', difficulty: 'High', reward: 890000, hook: 'Clear out the industrial district of a rival gang.', objectives: ['Destroy supply caches', 'Eliminate lieutenants', 'Claim territory'], status: 'available' },
+  { id: 'm23', title: 'Silent Sting', type: 'Stealth', difficulty: 'Low', reward: 110000, hook: 'Recover a stolen prototype from a local workshop.', objectives: ['Neutralize guards', 'Pick the lock', 'Leave no prints'], status: 'available' },
+  { id: 'm24', title: 'The Leviathan Job', type: 'Heist', difficulty: 'Legendary', reward: 6000000, hook: 'Heist the experimental submarine from the naval base.', objectives: ['Submerge unnoticed', 'Disable sonar', 'Navigate minefield'], status: 'available' },
+  { id: 'm25', title: 'Glitch Protocol', type: 'Hacking', difficulty: 'Medium', reward: 440000, hook: 'Manipulate the stock market for a major payout.', objectives: ['Trigger trade bots', 'Fake market crash', 'Exit position'], status: 'available' },
+  { id: 'm26', title: 'Desert Storm', type: 'Driving', difficulty: 'Medium', reward: 490000, hook: 'Race through the outskirts of Nexus City in a sandstorm.', objectives: ['Follow navigation beacons', 'Jump the gorge', 'Finish first'], status: 'available' },
+  { id: 'm27', title: 'Apex Predator', type: 'Combat', difficulty: 'Extreme', reward: 1950000, hook: 'Assassinate the high-ranking board member in his fortress.', objectives: ['Breach the gates', 'Clear the guards', 'Eliminate target'], status: 'available' },
+  { id: 'm28', title: 'Mirror Edge', type: 'Stealth', difficulty: 'High', reward: 860000, hook: 'Steal the data drive from the rooftop lab.', objectives: ['Bypass biometric scanners', 'Zip-line between towers', 'Disable roof drones'], status: 'available' },
+  { id: 'm29', title: 'The Glass Heist', type: 'Heist', difficulty: 'High', reward: 1250000, hook: 'Shatter the display of the world\'s rarest diamond.', objectives: ['Bypass laser grid', 'Timed explosive breach', 'Rooftop extraction'], status: 'available' },
+  { id: 'm30', title: 'Neural Nexus', type: 'Hacking', difficulty: 'Legendary', reward: 4500000, hook: 'Interface with the city AI and overwrite its prime directives.', objectives: ['Enter neural link', 'Solve logic gates', 'Survive firewall counter-attack'], status: 'available' },
+  { id: 'm31', title: 'Final Reckoning', type: 'Combat', difficulty: 'Extreme', reward: 2200000, hook: 'Tear down the corporate HQ building floor by floor.', objectives: ['Plant charges', 'Eliminate heavy units', 'Jump before detonation'], status: 'available' },
 ];
 
 const App: React.FC = () => {
+  const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
   const [view, setView] = useState<GameView>('dashboard');
   const [characters, setCharacters] = useState<Character[]>(INITIAL_CHARACTERS);
   const [cars, setCars] = useState<Car[]>(INITIAL_CARS);
@@ -72,12 +105,37 @@ const App: React.FC = () => {
   const [isGeneratingMission, setIsGeneratingMission] = useState(false);
   const [isBriefing, setIsBriefing] = useState(false);
   
+  // Video Replay State
+  const [showReplay, setShowReplay] = useState(false);
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoStatus, setVideoStatus] = useState('');
+
   // Audio State
   const [masterVolume, setMasterVolume] = useState(0.5);
   const [ambientActive, setAmbientActive] = useState(false);
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const ambientNodesRef = useRef<{osc: OscillatorNode, gain: GainNode}[]>([]);
+
+  useEffect(() => {
+    const checkKey = async () => {
+      if (typeof window.aistudio !== 'undefined') {
+        const has = await window.aistudio.hasSelectedApiKey();
+        setHasApiKey(has);
+      } else {
+        setHasApiKey(true); // Fallback for environments without window.aistudio
+      }
+    };
+    checkKey();
+  }, []);
+
+  const handleConnect = async () => {
+    if (typeof window.aistudio !== 'undefined') {
+      await window.aistudio.openSelectKey();
+      setHasApiKey(true); // Proceed immediately as per instructions
+    }
+  };
 
   const addLog = useCallback((msg: string) => {
     setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev].slice(0, 15));
@@ -93,7 +151,6 @@ const App: React.FC = () => {
     addLog(`New vehicle assembled: ${car.model}`);
   }, [addLog]);
 
-  // Audio Engine Management
   const initAudio = () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -173,7 +230,6 @@ const App: React.FC = () => {
     mainGain.gain.setValueAtTime(masterVolume * 0.1, ctx.currentTime);
     mainGain.connect(ctx.destination);
 
-    // Deep Drone
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
     osc1.type = 'sawtooth';
@@ -222,8 +278,10 @@ const App: React.FC = () => {
       source.connect(ctx.destination);
       source.onended = () => setIsBriefing(false);
       source.start();
-    } catch (e) {
-      console.warn("Briefing audio failed", e);
+    } catch (e: any) {
+      if (e.message?.includes("Requested entity was not found")) {
+        setHasApiKey(false);
+      }
       setIsBriefing(false);
     }
   };
@@ -245,6 +303,26 @@ const App: React.FC = () => {
     await playBriefing(`Initializing mission: ${mission.title}. Target is secured. Good luck operative.`);
   };
 
+  const handleWatchReplay = async (mission: Mission) => {
+    playSFX('click');
+    setShowReplay(true);
+    setIsGeneratingVideo(true);
+    setVideoStatus("Connecting to surveillance neural network...");
+    
+    try {
+      const url = await generateMissionVideo(mission, setVideoStatus);
+      setVideoUrl(url);
+    } catch (err: any) {
+      if (err.message?.includes("Requested entity was not found")) {
+        setHasApiKey(false);
+        setShowReplay(false);
+      }
+      addLog("Surveillance link lost: Generation failed.");
+    } finally {
+      setIsGeneratingVideo(false);
+    }
+  };
+
   const handleSetView = useCallback((newView: GameView) => {
     if (view !== newView) {
       playSFX('nav');
@@ -252,12 +330,51 @@ const App: React.FC = () => {
     }
   }, [view, playSFX]);
 
+  if (hasApiKey === false) {
+    return (
+      <div className="h-screen bg-black flex items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full glass p-12 rounded-[3rem] border border-cyan-500/20 shadow-[0_0_100px_rgba(6,182,212,0.1)]">
+          <div className="w-20 h-20 bg-zinc-900 rounded-[2rem] border border-white/10 flex items-center justify-center mx-auto mb-8">
+            <Lock className="text-cyan-400" size={32} />
+          </div>
+          <h1 className="text-3xl font-orbitron font-black italic uppercase tracking-tighter mb-4">Neural Link <span className="text-red-500">Offline</span></h1>
+          <p className="text-zinc-500 text-xs font-mono mb-8 uppercase leading-relaxed tracking-wider">
+            Access to the Nexus Grid requires an authorized API Key from a paid project.
+          </p>
+          <div className="space-y-4">
+            <button 
+              onClick={handleConnect}
+              className="w-full bg-cyan-500 text-black py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-cyan-500/20 flex items-center justify-center gap-2"
+            >
+              <Key size={16} /> AUTHORIZE LINK
+            </button>
+            <a 
+              href="https://ai.google.dev/gemini-api/docs/billing" 
+              target="_blank" 
+              className="flex items-center justify-center gap-2 text-[10px] font-black text-zinc-600 hover:text-cyan-400 transition-colors uppercase tracking-widest"
+            >
+              Billing Documentation <ExternalLink size={12} />
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-black text-white font-inter selection:bg-cyan-500 overflow-hidden relative">
       <Sidebar currentView={view} setView={handleSetView} onShowTutorial={() => { playSFX('click'); setShowTutorial(true); }} />
       
       <AnimatePresence>
         {showTutorial && <TutorialModal onClose={() => { playSFX('click'); setShowTutorial(false); }} />}
+        {showReplay && (
+          <VideoReplayModal 
+            videoUrl={videoUrl} 
+            isLoading={isGeneratingVideo} 
+            statusMessage={videoStatus}
+            onClose={() => { setShowReplay(false); setVideoUrl(null); }} 
+          />
+        )}
         {showSettings && (
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -311,32 +428,12 @@ const App: React.FC = () => {
       <main className="flex-1 overflow-y-auto p-6 md:p-12 scrollbar-hide relative z-10">
         <div className="fixed top-0 right-0 w-[1000px] h-[1000px] bg-cyan-500/5 rounded-full blur-[150px] -z-10 animate-pulse pointer-events-none" />
         
-        {/* Settings Toggle Button */}
         <button 
           onClick={() => { playSFX('click'); setShowSettings(true); }}
           className="fixed top-8 right-8 z-50 p-4 glass rounded-2xl text-zinc-500 hover:text-white border border-white/5 transition-all active:scale-95"
         >
           <Settings size={20} />
         </button>
-
-        <AnimatePresence>
-          {notification && (
-            <motion.div 
-              initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed top-10 left-1/2 -translate-x-1/2 z-[1000]"
-            >
-              <div className={`glass px-8 py-5 rounded-[2rem] border ${notification.type === 'success' ? 'border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.2)]' : 'border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.2)]'}`}>
-                <div className="flex items-center gap-4">
-                  {notification.type === 'success' ? <Zap className="text-emerald-400" /> : <Skull className="text-red-400" />}
-                  <div>
-                    <h4 className="font-orbitron font-black uppercase text-[10px] tracking-widest">{notification.title}</h4>
-                    <p className="text-zinc-400 text-[10px] font-mono">{notification.message}</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         <AnimatePresence mode="wait">
           {view === 'dashboard' && (
@@ -365,7 +462,7 @@ const App: React.FC = () => {
                   { label: 'Reputation', val: level, icon: Trophy, color: 'border-cyan-500' },
                   { label: 'Heat', val: notoriety, icon: ShieldAlert, color: 'border-red-500' },
                   { label: 'Assets', val: characters.length + cars.length, icon: Activity, color: 'border-gold' },
-                  { label: 'Voice', val: isBriefing ? 'ACTIVE' : 'READY', icon: Volume2, color: 'border-emerald-500' },
+                  { label: 'Lite Gen', val: 'ACTIVE', icon: Cpu, color: 'border-emerald-500' },
                 ].map((card, i) => (
                   <motion.div 
                     whileHover={{ scale: 1.05 }} key={i} 
@@ -423,9 +520,15 @@ const App: React.FC = () => {
                   const m = await generateMissionDescription(t, type, difficulty);
                   setMissions(prev => [{ ...m, id: Math.random().toString(), status: 'available' }, ...prev]);
                   addLog(`Contract generated: ${m.title}`);
-                } catch(e) { addLog("Gen failed: Signal lost."); }
+                } catch(e: any) { 
+                  if (e.message?.includes("Requested entity was not found")) {
+                    setHasApiKey(false);
+                  }
+                  addLog("Gen failed: Signal lost."); 
+                }
                 finally { setIsGeneratingMission(false); }
               }}
+              onWatchReplay={handleWatchReplay}
               isGenerating={isGeneratingMission} onShowTutorial={() => { playSFX('click'); setShowTutorial(true); }}
               onReplay={(id) => { playSFX('click'); setMissions(prev => prev.map(m => m.id === id ? { ...m, status: 'available' } : m)); }}
             />
