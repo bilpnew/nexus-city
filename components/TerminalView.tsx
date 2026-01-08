@@ -6,9 +6,10 @@ interface TerminalViewProps {
   balance: number;
   setBalance: React.Dispatch<React.SetStateAction<number>>;
   addLog: (msg: string) => void;
+  onPlaySFX?: (type: 'nav' | 'recruit' | 'mission' | 'click') => void;
 }
 
-const TerminalView: React.FC<TerminalViewProps> = ({ balance, setBalance, addLog }) => {
+const TerminalView: React.FC<TerminalViewProps> = ({ balance, setBalance, addLog, onPlaySFX }) => {
   const [isHacking, setIsHacking] = useState(false);
   const [hackProgress, setHackProgress] = useState(0);
   const [currentNode, setCurrentNode] = useState('LOCAL_HOST');
@@ -17,6 +18,7 @@ const TerminalView: React.FC<TerminalViewProps> = ({ balance, setBalance, addLog
   const startHack = () => {
     setIsHacking(true);
     setHackProgress(0);
+    onPlaySFX?.('click');
     const node = ['SWISS_BANK_CORE', 'CRYPTO_EXCHANGE_ALPHA', 'GLOBAL_SATELLITE_UPLINK'][Math.floor(Math.random() * 3)];
     setCurrentNode(node);
     setTerminalLogs(prev => [`[NETWORK] INJECTING EXPLOIT INTO ${node}...`, ...prev]);
@@ -29,6 +31,7 @@ const TerminalView: React.FC<TerminalViewProps> = ({ balance, setBalance, addLog
           if (p >= 100) {
             clearInterval(timer);
             setIsHacking(false);
+            onPlaySFX?.('mission');
             const reward = Math.floor(Math.random() * 250000) + 50000;
             setBalance(b => b + reward);
             addLog(`TERMINAL HACK SUCCESS: Extracted $${reward.toLocaleString()} from ${currentNode}`);
@@ -40,7 +43,7 @@ const TerminalView: React.FC<TerminalViewProps> = ({ balance, setBalance, addLog
       }, 200);
       return () => clearInterval(timer);
     }
-  }, [isHacking, currentNode, setBalance, addLog]);
+  }, [isHacking, currentNode, setBalance, addLog, onPlaySFX]);
 
   return (
     <div className="h-full flex flex-col animate-in fade-in duration-700">
@@ -75,7 +78,10 @@ const TerminalView: React.FC<TerminalViewProps> = ({ balance, setBalance, addLog
             >
               {isHacking ? <Loader2 className="animate-spin mx-auto" size={20} /> : "INITIALIZE BRUTE-FORCE"}
             </button>
-            <button className="px-8 bg-zinc-900 border border-white/10 rounded-xl hover:bg-zinc-800 transition-colors">
+            <button 
+              onClick={() => onPlaySFX?.('click')}
+              className="px-8 bg-zinc-900 border border-white/10 rounded-xl hover:bg-zinc-800 transition-colors"
+            >
               <Shield size={20} className="text-zinc-500" />
             </button>
           </div>
@@ -85,14 +91,20 @@ const TerminalView: React.FC<TerminalViewProps> = ({ balance, setBalance, addLog
           <div className="glass p-8 rounded-3xl border border-white/5">
             <h3 className="font-orbitron font-bold text-xs uppercase text-zinc-500 tracking-widest mb-6">Network Tools</h3>
             <div className="grid grid-cols-1 gap-4">
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-emerald-500/30 transition-all cursor-pointer group">
+              <div 
+                onClick={() => onPlaySFX?.('click')}
+                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-emerald-500/30 transition-all cursor-pointer group"
+              >
                 <Database size={20} className="text-emerald-400" />
                 <div>
                   <div className="text-[10px] font-black uppercase text-white">Database Scraper</div>
                   <div className="text-[9px] text-zinc-500">Extracts bank credentials</div>
                 </div>
               </div>
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-cyan-500/30 transition-all cursor-pointer group">
+              <div 
+                onClick={() => onPlaySFX?.('click')}
+                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-cyan-500/30 transition-all cursor-pointer group"
+              >
                 <Cpu size={20} className="text-cyan-400" />
                 <div>
                   <div className="text-[10px] font-black uppercase text-white">Node Overclocker</div>

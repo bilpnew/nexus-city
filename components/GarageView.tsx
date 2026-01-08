@@ -8,17 +8,20 @@ import { Plus, Car as CarIcon, Wand2, Loader2, Gauge, Shield } from 'lucide-reac
 interface GarageViewProps {
   cars: Car[];
   addCar: (car: Car) => void;
+  onPlaySFX?: (type: 'nav' | 'recruit' | 'mission' | 'click') => void;
 }
 
-const GarageView: React.FC<GarageViewProps> = ({ cars, addCar }) => {
+const GarageView: React.FC<GarageViewProps> = ({ cars, addCar, onPlaySFX }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [prompt, setPrompt] = useState('');
 
   const handleGenerate = async () => {
     if (!prompt) return;
     setIsGenerating(true);
+    onPlaySFX?.('click');
     try {
       const imageUrl = await generateCarImage(prompt);
+      onPlaySFX?.('recruit'); // reusing recruit for assembly
       const newCar: Car = {
         id: Math.random().toString(36).substring(2, 11),
         model: prompt.split(' ').slice(0, 2).join(' ') || "Experimental Unit",
@@ -102,8 +105,18 @@ const GarageView: React.FC<GarageViewProps> = ({ cars, addCar }) => {
               </div>
 
               <div className="flex items-center gap-4 pt-6 border-t border-white/5">
-                <button className="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-white/5 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors">UPGRADE</button>
-                <button className="flex-1 bg-yellow-400 text-black py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-yellow-300 transition-colors shadow-lg active:scale-95">EQUIP ASSET</button>
+                <button 
+                  onClick={() => onPlaySFX?.('click')}
+                  className="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-white/5 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors"
+                >
+                  UPGRADE
+                </button>
+                <button 
+                  onClick={() => onPlaySFX?.('click')}
+                  className="flex-1 bg-yellow-400 text-black py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-yellow-300 transition-colors shadow-lg active:scale-95"
+                >
+                  EQUIP ASSET
+                </button>
               </div>
             </div>
           </div>
