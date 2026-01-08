@@ -5,20 +5,19 @@ import CharacterView from './components/CharacterView';
 import GarageView from './components/GarageView';
 import MapView from './components/MapView';
 import MissionView from './components/MissionView';
+import TerminalView from './components/TerminalView';
 import TutorialModal from './components/TutorialModal';
 import { Character, Car, GameView, Mission, TacticalEvent } from './types';
+import { generateMissionDescription } from './services/gemini';
 import { 
   TrendingUp, 
   Skull, 
   Clock, 
-  Bell,
   Zap,
   Terminal,
   Activity,
   Trophy,
   Flame,
-  Star,
-  AlertCircle,
   CheckCircle,
   XCircle,
   Info
@@ -28,9 +27,6 @@ const INITIAL_MISSIONS: Mission[] = [
   { id: 'm1', title: 'Silicon Ghost', type: 'Stealth', difficulty: 'Medium', reward: 450000, hook: 'Infiltrate the Arasaka server farm and inject a logic bomb.', objectives: ['Bypass biometric scanners', 'Avoid camera detection', 'Extract core data'], status: 'available', prestigeLevel: 0 },
   { id: 'm2', title: 'Neon Blitz', type: 'Driving', difficulty: 'Low', reward: 120000, hook: 'Deliver a high-priority package across the bridge in under 3 minutes.', objectives: ['Maintain 120mph avg speed', 'Avoid police roadblocks', 'Secure drop-off point'], status: 'available', prestigeLevel: 0 },
   { id: 'm3', title: 'The Iron Curtain', type: 'Heist', difficulty: 'Extreme', reward: 2500000, hook: 'The ultimate vault. No one has ever walked out of the Metro Bank alive.', objectives: ['Thermal drill the vault', 'Subdue security response', 'Escape via helicopter'], status: 'available', prestigeLevel: 0 },
-  { id: 'm4', title: 'Carbon Silence', type: 'Stealth', difficulty: 'High', reward: 890000, hook: 'A rival syndicate leader is meeting a contact. Ghost them.', objectives: ['Track target to rooftop', 'Synchronize takedown', 'Evade area before backup'], status: 'available', prestigeLevel: 0 },
-  { id: 'm5', title: 'Volt Hijack', type: 'Combat', difficulty: 'Medium', reward: 320000, hook: 'A military convoy is carrying experimental batteries. Take them.', objectives: ['Disable lead escort', 'Neutralize armed guards', 'Secure cargo truck'], status: 'available', prestigeLevel: 0 },
-  { id: 'm8', title: 'Apex Predator', type: 'Combat', difficulty: 'Legendary', reward: 15000000, hook: 'The CEO of Militech is leaving his tower. This is the big one.', objectives: ['Disable skyscraper security', 'Fight through Elite Mechs', 'Terminate the CEO'], status: 'available', prestigeLevel: 0 },
 ];
 
 const STARTING_CHARS: Character[] = [
@@ -60,14 +56,6 @@ const STARTING_CARS: Car[] = [
     description: 'Lightweight frame with a twin-turbo hyper-drive.',
     imageUrl: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&q=80&w=600',
     stats: { speed: 95, handling: 88, armor: 45 }
-  },
-  {
-    id: 'v2',
-    model: 'Goliath T-800',
-    class: 'Heavy Enforcer',
-    description: 'Plated with experimental composite armor.',
-    imageUrl: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=600',
-    stats: { speed: 60, handling: 55, armor: 98 }
   }
 ];
 
@@ -89,15 +77,6 @@ const TACTICAL_EVENTS: TacticalEvent[] = [
       { label: 'Signal Ghost', outcome: 'progress', detail: 'Rapidly bypasses the lock.' },
       { label: 'Abort Sync', outcome: 'damage', detail: 'Retry from scratch. High stress level.' }
     ]
-  },
-  {
-    id: 'e3',
-    description: 'Security drones have spotted the team on the roof.',
-    options: [
-      { label: 'Engage Drones', outcome: 'damage', detail: 'Shoot them down. Risky combat.' },
-      { label: 'ECM Jammer', outcome: 'success', detail: 'Electronic countermeasures used. Clean escape.' },
-      { label: 'Hide in Shadows', outcome: 'delay', detail: 'Wait for them to pass.' }
-    ]
   }
 ];
 
@@ -109,10 +88,7 @@ const TACTICAL_PHRASES = [
   "Uploading logic bomb to core...",
   "Maintaining stealth profile.",
   "Engaging silent takedown protocol.",
-  "Rerouting power to engine systems.",
   "Decryption at 45%. Monitoring ICE.",
-  "Hostile reinforcements detected on sensors.",
-  "Jamming radio frequencies in sector.",
   "Extraction route calculated. Proceeding."
 ];
 
@@ -129,6 +105,7 @@ const App: React.FC = () => {
   const [logs, setLogs] = useState<string[]>(['System initialized...', 'Network handshake complete', 'Crew: Jax Vane active.']);
   const [notification, setNotification] = useState<{type: 'success' | 'failure', message: string, missionTitle: string} | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [isGeneratingMission, setIsGeneratingMission] = useState(false);
 
   const addLog = useCallback((msg: string) => {
     setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev].slice(0, 15));
@@ -137,6 +114,31 @@ const App: React.FC = () => {
   const triggerNotification = (type: 'success' | 'failure', message: string, missionTitle: string) => {
     setNotification({ type, message, missionTitle });
     setTimeout(() => setNotification(null), 5000);
+  };
+
+  const handleGenerateMission = async (theme: string) => {
+    setIsGeneratingMission(true);
+    addLog(`Scanning city for new opportunities: ${theme}...`);
+    try {
+      const data = await generateMissionDescription(theme);
+      const newMission: Mission = {
+        id: 'm' + Math.random().toString(36).substr(2, 9),
+        title: data.title || "Unknown Contract",
+        hook: data.hook || "No details provided.",
+        objectives: data.objectives || ["Complete primary goal"],
+        difficulty: data.difficulty as any || "Medium",
+        type: data.type as any || "Heist",
+        reward: data.reward || 500000,
+        status: 'available',
+        prestigeLevel: 0
+      };
+      setMissions(prev => [newMission, ...prev]);
+      addLog(`New contract secured: ${newMission.title}`);
+    } catch (e) {
+      addLog(`Failed to decrypt mission data: Signal lost.`);
+    } finally {
+      setIsGeneratingMission(false);
+    }
   };
 
   useEffect(() => {
@@ -152,17 +154,12 @@ const App: React.FC = () => {
           const currentLogs = m.tacticalLogs ?? [];
           
           const riskFactor = { 'Low': 0.05, 'Medium': 0.1, 'High': 0.25, 'Extreme': 0.45, 'Legendary': 0.7 }[m.difficulty];
-          
-          // Character Stat Influence
           const assignedChar = characters.find(c => c.id === m.assignedCharacterId);
           const shootingBonus = (assignedChar?.stats.shooting || 50) / 100;
-          const drivingBonus = (assignedChar?.stats.driving || 50) / 100;
 
-          // Enemy AI Damage
           const damageRoll = Math.random() < riskFactor ? Math.floor(Math.random() * (12 - shootingBonus * 5)) : 0;
           const progressRoll = Math.random() > 0.25 ? Math.floor(Math.random() * 6) + 2 : 0;
           
-          // Combat Specific Logic
           let nextEnemyHealth = currentEnemyHealth;
           if (m.type === 'Combat') {
             const combatDmg = Math.floor((shootingBonus * 10) + Math.random() * 5);
@@ -170,7 +167,6 @@ const App: React.FC = () => {
           }
 
           const nextHealth = Math.max(0, currentHealth - damageRoll);
-          // If combat mission, progress is tied to enemy health
           const nextProgress = m.type === 'Combat' ? Math.min(100, 100 - nextEnemyHealth) : Math.min(100, currentProgress + progressRoll);
 
           if (Math.random() > 0.96 && nextProgress < 90) {
@@ -187,35 +183,30 @@ const App: React.FC = () => {
           }
 
           if (nextHealth <= 0) {
-            addLog(`CRITICAL FAILURE: ${m.title}. Vital signs lost.`);
-            setNotoriety(prev => Math.min(5, prev + 1));
             triggerNotification('failure', 'Crew Neutralized', m.title);
             return { ...m, status: 'failed', failureReason: 'Crew Neutralized', health: 0, endTime: undefined, tacticalLogs: ["CONNECTION TERMINATED."] };
           }
 
           if (m.endTime && now >= m.endTime) {
-            addLog(`FAILURE: ${m.title}. Window closed.`);
             triggerNotification('failure', 'Time Limit Exceeded', m.title);
-            return { ...m, status: 'failed', failureReason: 'Extraction Blocked', endTime: undefined, tacticalLogs: ["TIME EXPIRED. RETREATING."] };
+            return { ...m, status: 'failed', failureReason: 'Extraction Blocked', endTime: undefined, tacticalLogs: ["TIME EXPIRED."] };
           }
 
           if (nextProgress >= 100) {
             const reward = Math.floor(m.reward * (nextHealth / 100 + 0.5));
             setBalance(b => b + reward);
-            addLog(`SUCCESS: ${m.title}. Credited $${reward.toLocaleString()}`);
             triggerNotification('success', `Payout: $${reward.toLocaleString()}`, m.title);
             
             const gainedXp = 600 + (reward / 800);
             setXp(pxp => {
               if (pxp + gainedXp >= maxXp) {
                 setLevel(prevLevel => prevLevel + 1);
-                addLog(`PROMOTED: Rank ${level + 1} Syndicate.`);
                 return (pxp + gainedXp) - maxXp;
               }
               return pxp + gainedXp;
             });
 
-            return { ...m, status: 'completed', progress: 100, health: nextHealth, endTime: undefined, tacticalLogs: ["OBJECTIVE SECURED. EVAC SUCCESSFUL."] };
+            return { ...m, status: 'completed', progress: 100, health: nextHealth, endTime: undefined, tacticalLogs: ["SUCCESS."] };
           }
 
           return { ...m, health: nextHealth, progress: nextProgress, enemyHealth: nextEnemyHealth, tacticalLogs: nextLogs };
@@ -233,21 +224,18 @@ const App: React.FC = () => {
         let nextHealth = m.health ?? 100;
         let nextProgress = m.progress ?? 0;
         let nextEndTime = m.endTime ?? Date.now();
-        let log = `TACTICAL CHOICE: ${option.label}. ${option.detail}`;
-
         if (option.outcome === 'damage') nextHealth -= 15;
         if (option.outcome === 'progress') nextProgress += 15;
         if (option.outcome === 'delay') nextEndTime += 15000;
         if (option.outcome === 'success') nextProgress += 5;
 
-        addLog(log);
         return { 
           ...m, 
           activeEvent: undefined, 
           health: Math.max(0, nextHealth), 
           progress: Math.min(100, nextProgress),
           endTime: nextEndTime,
-          tacticalLogs: [log, ...(m.tacticalLogs || [])].slice(0, 5)
+          tacticalLogs: [`Choice: ${option.label}`, ...(m.tacticalLogs || [])].slice(0, 5)
         };
       }
       return m;
@@ -260,7 +248,6 @@ const App: React.FC = () => {
   const handleAcceptMission = (id: string, characterId: string) => {
     const mission = missions.find(m => m.id === id);
     if (!mission) return;
-
     const durationMap = { 'Low': 30, 'Medium': 60, 'High': 120, 'Extreme': 240, 'Legendary': 600 };
     const seconds = durationMap[mission.difficulty] || 60;
 
@@ -272,11 +259,11 @@ const App: React.FC = () => {
         progress: 0, 
         enemyHealth: 100,
         assignedCharacterId: characterId,
-        tacticalLogs: ["LINK ESTABLISHED.", "INFILTRATING SECTOR..."],
+        tacticalLogs: ["LINK ESTABLISHED."],
         endTime: Date.now() + (seconds * 1000) 
       } : m
     ));
-    addLog(`INITIATING: ${mission.title}. Lead Operative: ${characters.find(c => c.id === characterId)?.name}`);
+    addLog(`INITIATING: ${mission.title}.`);
   };
 
   const handleReplayMission = (id: string) => {
@@ -285,10 +272,7 @@ const App: React.FC = () => {
         const difficultyLevels: Mission['difficulty'][] = ['Low', 'Medium', 'High', 'Extreme', 'Legendary'];
         const currentDiffIndex = difficultyLevels.indexOf(m.difficulty);
         const nextDifficulty = difficultyLevels[Math.min(currentDiffIndex + 1, 4)];
-        
-        const baseReward = m.status === 'completed' ? m.reward : m.reward / 1.5;
-        const scaledReward = Math.floor(baseReward * 1.5);
-        
+        const scaledReward = Math.floor(m.reward * 1.5);
         return {
           ...m,
           status: 'available',
@@ -347,7 +331,7 @@ const App: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest italic">Connection: Secure // Sector: {Math.floor(Math.random() * 100)}</p>
+                  <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest italic">Connection: Secure // Sector: 77</p>
                 </div>
               </div>
               <div className="text-right">
@@ -372,16 +356,13 @@ const App: React.FC = () => {
                 <div className="text-xs font-bold text-zinc-500 tracking-widest mb-1 uppercase">How To Play</div>
                 <div className="text-3xl font-orbitron font-black italic">VIEW MANUAL</div>
               </div>
-              <div className="glass p-8 rounded-[2.5rem] border-l-4 border-red-500 hover:bg-white/5 transition-all cursor-pointer group">
-                <div className="p-3 bg-red-500/10 rounded-2xl text-red-400 w-fit mb-4 group-hover:scale-110 transition-transform"><Skull /></div>
-                <div className="text-xs font-bold text-zinc-500 tracking-widest mb-1 uppercase">Heat Level</div>
-                <div className="text-3xl font-orbitron font-black italic flex items-center gap-3">
-                  {notoriety >= 4 ? 'CRITICAL' : 'STABLE'}
-                  {notoriety >= 4 && <Flame size={28} className="text-red-500 animate-pulse" />}
-                </div>
+              <div className="glass p-8 rounded-[2.5rem] border-l-4 border-emerald-500 hover:bg-white/5 transition-all cursor-pointer group" onClick={() => setView('terminal')}>
+                <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 w-fit mb-4 group-hover:scale-110 transition-transform"><Terminal /></div>
+                <div className="text-xs font-bold text-zinc-500 tracking-widest mb-1 uppercase">Terminal Access</div>
+                <div className="text-3xl font-orbitron font-black italic">HACK SYSTEM</div>
               </div>
-              <div className="glass p-8 rounded-[2.5rem] border-l-4 border-emerald-500 hover:bg-white/5 transition-all cursor-pointer group" onClick={() => setView('missions')}>
-                <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 w-fit mb-4 group-hover:scale-110 transition-transform"><Zap /></div>
+              <div className="glass p-8 rounded-[2.5rem] border-l-4 border-cyan-500 hover:bg-white/5 transition-all cursor-pointer group" onClick={() => setView('missions')}>
+                <div className="p-3 bg-cyan-500/10 rounded-2xl text-cyan-400 w-fit mb-4 group-hover:scale-110 transition-transform"><Zap /></div>
                 <div className="text-xs font-bold text-zinc-500 tracking-widest mb-1 uppercase">Live Operations</div>
                 <div className="text-3xl font-orbitron font-black italic">{missions.filter(m => m.status === 'in-progress').length} RUNNING</div>
               </div>
@@ -421,7 +402,19 @@ const App: React.FC = () => {
         {view === 'safehouse' && <CharacterView characters={characters} addCharacter={addCharacter} />}
         {view === 'garage' && <GarageView cars={cars} addCar={addCar} />}
         {view === 'map' && <MapView />}
-        {view === 'missions' && <MissionView missions={missions} characters={characters} onAccept={handleAcceptMission} onReplay={handleReplayMission} onResolveEvent={handleResolveEvent} onShowTutorial={() => setShowTutorial(true)} />}
+        {view === 'terminal' && <TerminalView balance={balance} setBalance={setBalance} addLog={addLog} />}
+        {view === 'missions' && (
+          <MissionView 
+            missions={missions} 
+            characters={characters} 
+            onAccept={handleAcceptMission} 
+            onReplay={handleReplayMission} 
+            onResolveEvent={handleResolveEvent} 
+            onShowTutorial={() => setShowTutorial(true)} 
+            onGenerateMission={handleGenerateMission}
+            isGenerating={isGeneratingMission}
+          />
+        )}
       </main>
     </div>
   );

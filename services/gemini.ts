@@ -1,8 +1,20 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Fix: Simplified initialization to use process.env.API_KEY directly as per guidelines.
 const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+const extractJSON = (text: string) => {
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    return JSON.parse(text);
+  } catch (e) {
+    console.error("Failed to parse JSON from AI response:", text);
+    throw new Error("Invalid intelligence data format received.");
+  }
+};
 
 export const generateCharacterImage = async (prompt: string) => {
   const ai = getAI();
@@ -23,7 +35,7 @@ export const generateCharacterImage = async (prompt: string) => {
       return `data:image/png;base64,${part.inlineData.data}`;
     }
   }
-  throw new Error("Failed to generate character image");
+  throw new Error("Failed to generate character image: No image data returned.");
 };
 
 export const generateCarImage = async (prompt: string) => {
@@ -45,7 +57,7 @@ export const generateCarImage = async (prompt: string) => {
       return `data:image/png;base64,${part.inlineData.data}`;
     }
   }
-  throw new Error("Failed to generate car image");
+  throw new Error("Failed to generate car image: No image data returned.");
 };
 
 export const generateMissionDescription = async (theme: string) => {
@@ -53,7 +65,10 @@ export const generateMissionDescription = async (theme: string) => {
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: `Create a brief, gritty GTA-style mission description based on the theme: ${theme}. 
-    Include a title, a one-sentence hook, and three tactical objectives. Return as JSON.`,
+    Include a title, a one-sentence hook, three tactical objectives, and a high payout amount. 
+    Select a mission type from: Heist, Stealth, Combat, Driving, Hacking.
+    Select a difficulty from: Low, Medium, High, Extreme, Legendary.
+    Return as JSON.`,
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -65,11 +80,14 @@ export const generateMissionDescription = async (theme: string) => {
             type: Type.ARRAY,
             items: { type: Type.STRING }
           },
-          difficulty: { type: Type.STRING }
+          difficulty: { type: Type.STRING },
+          type: { type: Type.STRING },
+          reward: { type: Type.NUMBER }
         },
-        required: ["title", "hook", "objectives", "difficulty"]
+        required: ["title", "hook", "objectives", "difficulty", "type", "reward"]
       }
     }
   });
-  return JSON.parse(response.text || '{}');
+  
+  return extractJSON(response.text || '{}');
 };
