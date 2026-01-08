@@ -14,13 +14,18 @@ import {
   Skull, 
   Clock, 
   Zap,
-  Terminal,
+  Terminal as TerminalIcon,
   Activity,
   Trophy,
   Flame,
   CheckCircle,
   XCircle,
-  Info
+  Info,
+  ShieldAlert,
+  Wifi,
+  Database,
+  Search,
+  Crosshair
 } from 'lucide-react';
 
 const INITIAL_MISSIONS: Mission[] = [
@@ -324,14 +329,14 @@ const App: React.FC = () => {
             <header className="flex justify-between items-center">
               <div>
                 <div className="flex items-center gap-3 mb-1">
-                  <h2 className="text-4xl font-orbitron font-black italic tracking-tighter">NEXUS <span className="text-cyan-400">HQ</span></h2>
+                  <h2 className="text-4xl font-orbitron font-black italic tracking-tighter uppercase">NEXUS <span className="text-cyan-400">HQ</span></h2>
                   <div className="bg-cyan-500/20 px-3 py-1 rounded-full border border-cyan-500/30 text-cyan-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                     <Trophy size={12} /> SYNDICATE RANK {level}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest italic">Connection: Secure // Sector: 77</p>
+                  <Wifi size={14} className="text-emerald-500 animate-pulse" />
+                  <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest italic">Signal: Encrypted // Node: Sector 77</p>
                 </div>
               </div>
               <div className="text-right">
@@ -340,7 +345,7 @@ const App: React.FC = () => {
               </div>
             </header>
 
-            <div className="glass p-2 rounded-2xl overflow-hidden relative border border-white/5 shadow-inner">
+            <div className="glass p-2 rounded-2xl overflow-hidden relative border border-white/5 shadow-inner bg-black/40">
               <div className="flex justify-between text-[9px] font-black text-zinc-600 tracking-[0.3em] uppercase px-4 mb-2">
                 <span>Network Reach</span>
                 <span className="text-cyan-400">{(xp / maxXp * 100).toFixed(1)}%</span>
@@ -350,30 +355,39 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="glass p-8 rounded-[2.5rem] border-l-4 border-cyan-500 hover:bg-white/5 transition-all cursor-pointer group" onClick={() => setShowTutorial(true)}>
                 <div className="p-3 bg-cyan-500/10 rounded-2xl text-cyan-400 w-fit mb-4 group-hover:scale-110 transition-transform"><Info /></div>
                 <div className="text-xs font-bold text-zinc-500 tracking-widest mb-1 uppercase">How To Play</div>
-                <div className="text-3xl font-orbitron font-black italic">VIEW MANUAL</div>
+                <div className="text-2xl font-orbitron font-black italic uppercase">MANUAL</div>
               </div>
               <div className="glass p-8 rounded-[2.5rem] border-l-4 border-emerald-500 hover:bg-white/5 transition-all cursor-pointer group" onClick={() => setView('terminal')}>
-                <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 w-fit mb-4 group-hover:scale-110 transition-transform"><Terminal /></div>
-                <div className="text-xs font-bold text-zinc-500 tracking-widest mb-1 uppercase">Terminal Access</div>
-                <div className="text-3xl font-orbitron font-black italic">HACK SYSTEM</div>
+                <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 w-fit mb-4 group-hover:scale-110 transition-transform"><TerminalIcon /></div>
+                <div className="text-xs font-bold text-zinc-500 tracking-widest mb-1 uppercase">Terminal</div>
+                <div className="text-2xl font-orbitron font-black italic uppercase">HACK</div>
+              </div>
+              <div className="glass p-8 rounded-[2.5rem] border-l-4 border-red-500 hover:bg-white/5 transition-all cursor-pointer group">
+                <div className="p-3 bg-red-500/10 rounded-2xl text-red-400 w-fit mb-4 group-hover:scale-110 transition-transform"><Skull /></div>
+                <div className="text-xs font-bold text-zinc-500 tracking-widest mb-1 uppercase">Heat Level</div>
+                <div className="text-2xl font-orbitron font-black italic uppercase">{notoriety}/5</div>
               </div>
               <div className="glass p-8 rounded-[2.5rem] border-l-4 border-cyan-500 hover:bg-white/5 transition-all cursor-pointer group" onClick={() => setView('missions')}>
                 <div className="p-3 bg-cyan-500/10 rounded-2xl text-cyan-400 w-fit mb-4 group-hover:scale-110 transition-transform"><Zap /></div>
-                <div className="text-xs font-bold text-zinc-500 tracking-widest mb-1 uppercase">Live Operations</div>
-                <div className="text-3xl font-orbitron font-black italic">{missions.filter(m => m.status === 'in-progress').length} RUNNING</div>
+                <div className="text-xs font-bold text-zinc-500 tracking-widest mb-1 uppercase">Operations</div>
+                <div className="text-2xl font-orbitron font-black italic uppercase">{missions.filter(m => m.status === 'in-progress').length} ACT</div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 glass p-8 rounded-[2.5rem] flex flex-col border border-white/5 shadow-2xl overflow-hidden">
+              <div className="lg:col-span-2 glass p-8 rounded-[2.5rem] flex flex-col border border-white/5 shadow-2xl overflow-hidden bg-black/20">
                 <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
                   <h3 className="font-orbitron font-black text-xl italic uppercase flex items-center gap-3 tracking-tighter">
                     <Activity size={20} className="text-cyan-400" /> SYSTEM FEED
                   </h3>
+                  <div className="flex gap-2 items-center">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-ping" />
+                    <div className="text-[10px] font-black text-cyan-500 uppercase tracking-widest">Live Uplink</div>
+                  </div>
                 </div>
                 <div className="flex-1 space-y-3 font-mono text-[11px] max-h-[400px] overflow-y-auto pr-4 scrollbar-hide">
                   {logs.map((log, i) => (
@@ -384,15 +398,19 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              <div className="glass p-8 rounded-[2.5rem] flex flex-col items-center justify-center text-center relative overflow-hidden group border border-white/5">
+              <div className="glass p-8 rounded-[2.5rem] flex flex-col items-center justify-center text-center relative overflow-hidden group border border-white/5 bg-black/60">
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-red-500/10 opacity-30 group-hover:opacity-100 transition-opacity" />
                 <div className="relative z-10 w-full">
-                  <div className="w-24 h-24 bg-zinc-900/80 rounded-[2rem] flex items-center justify-center mb-8 mx-auto border border-white/10 rotate-12 group-hover:rotate-0 transition-all duration-700 shadow-2xl backdrop-blur">
-                    <Terminal className="text-cyan-500" size={40} />
+                  <div className="w-24 h-24 bg-zinc-900/80 rounded-[2rem] flex items-center justify-center mb-8 mx-auto border border-white/10 rotate-12 group-hover:rotate-0 transition-all duration-700 shadow-2xl backdrop-blur relative">
+                    <TerminalIcon className="text-cyan-500" size={40} />
+                    <div className="absolute -top-2 -right-2 bg-red-500 w-6 h-6 rounded-full border-2 border-black flex items-center justify-center text-[10px] font-black shadow-[0_0_10px_rgba(239,68,68,0.5)]">!</div>
                   </div>
-                  <h3 className="font-orbitron font-black text-3xl italic uppercase mb-2 tracking-tighter">RESOURCES</h3>
-                  <p className="text-xs text-zinc-500 mb-10 uppercase tracking-[0.3em] font-bold">Operatives: {characters.length} // Fleet: {cars.length}</p>
-                  <button onClick={() => setView('safehouse')} className="w-full bg-white text-black py-5 rounded-2xl font-black text-sm hover:bg-cyan-400 transition-all transform hover:scale-[1.03] uppercase tracking-widest shadow-2xl active:scale-95">Expand Syndicate</button>
+                  <h3 className="font-orbitron font-black text-3xl italic uppercase mb-2 tracking-tighter">EMPIRE</h3>
+                  <p className="text-xs text-zinc-500 mb-10 uppercase tracking-[0.3em] font-bold">Crew: {characters.length} // Assets: {cars.length}</p>
+                  <button onClick={() => setView('safehouse')} className="w-full bg-white text-black py-5 rounded-2xl font-black text-sm hover:bg-cyan-400 transition-all transform hover:scale-[1.03] uppercase tracking-widest shadow-2xl active:scale-95">Expand Operations</button>
+                  <button onClick={() => setView('map')} className="w-full mt-4 bg-transparent border border-white/10 text-white py-4 rounded-2xl font-black text-xs hover:bg-white/5 transition-all uppercase tracking-widest flex items-center justify-center gap-2">
+                    <Search size={14} /> Global Map
+                  </button>
                 </div>
               </div>
             </div>
