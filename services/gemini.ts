@@ -1,8 +1,9 @@
 
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 
+// Guideline: Use a helper to always get a fresh instance right before call.
 const getAI = () => {
-  return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
 
 export const generateCharacterData = async (userPrompt: string) => {
@@ -37,6 +38,7 @@ export const generateCharacterData = async (userPrompt: string) => {
         }
       }
     });
+    // Guideline: Use response.text property directly.
     return JSON.parse(response.text);
   } catch (error) {
     console.error("Character Metadata Error:", error);
@@ -75,6 +77,7 @@ export const generateCarData = async (userPrompt: string) => {
         }
       }
     });
+    // Guideline: Use response.text property directly.
     return JSON.parse(response.text);
   } catch (error) {
     console.error("Car Metadata Error:", error);
@@ -157,6 +160,7 @@ export const generateMissionDescription = async (theme: string, type: string, di
         }
       }
     });
+    // Guideline: Use response.text property directly.
     return JSON.parse(response.text);
   } catch (error) {
     console.error("Mission Gen Error:", error);
@@ -190,7 +194,8 @@ export const generateBriefingAudio = async (text: string) => {
 };
 
 export const generateMissionVideo = async (mission: any, updateStatus: (msg: string) => void): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  // Always create a new instance right before use.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   updateStatus("Initializing best neural renderer...");
   let operation = await ai.models.generateVideos({
     model: 'veo-3.1-fast-generate-preview',
@@ -220,5 +225,6 @@ export const generateMissionVideo = async (mission: any, updateStatus: (msg: str
 
   const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
   if (!downloadLink) throw new Error("Video generation failed.");
+  // Guideline: Append API Key when fetching.
   return `${downloadLink}&key=${process.env.API_KEY}`;
 };

@@ -3,20 +3,22 @@ import React, { useState } from 'react';
 import { Car } from '../types';
 import { generateCarData, generateCarImage } from '../services/gemini';
 import StatBar from './StatBar';
-import { Plus, Car as CarIcon, Wand2, Loader2, Gauge, Shield, Sparkles, Cpu } from 'lucide-react';
+import { Plus, Car as CarIcon, Wand2, Loader2, Gauge, Shield, Sparkles, Cpu, MonitorOff } from 'lucide-react';
 
 interface GarageViewProps {
   cars: Car[];
   addCar: (car: Car) => void;
   onPlaySFX?: (type: 'nav' | 'recruit' | 'mission' | 'click') => void;
+  isOffline?: boolean;
 }
 
-const GarageView: React.FC<GarageViewProps> = ({ cars, addCar, onPlaySFX }) => {
+const GarageView: React.FC<GarageViewProps> = ({ cars, addCar, onPlaySFX, isOffline }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [status, setStatus] = useState('');
   const [prompt, setPrompt] = useState('');
 
   const handleGenerate = async () => {
+    if (isOffline) return;
     if (!prompt) return;
     setIsGenerating(true);
     onPlaySFX?.('click');
@@ -54,29 +56,44 @@ const GarageView: React.FC<GarageViewProps> = ({ cars, addCar, onPlaySFX }) => {
           <h2 className="text-4xl font-orbitron font-black italic mb-2 uppercase tracking-tighter">THE <span className="text-yellow-400">FLEET</span></h2>
           <p className="text-zinc-500 font-mono text-xs uppercase tracking-[0.2em]">Customize and deploy high-performance assets.</p>
         </div>
-        <div className="hidden md:flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/20 px-4 py-2 rounded-xl">
-          <Cpu size={14} className="text-yellow-400" />
-          <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest">Free Flash Gen</span>
+        <div className={`hidden md:flex items-center gap-2 border px-4 py-2 rounded-xl ${isOffline ? 'bg-red-500/10 border-red-500/20' : 'bg-yellow-400/10 border-yellow-400/20'}`}>
+          {isOffline ? (
+            <>
+              <MonitorOff size={14} className="text-red-400" />
+              <span className="text-[10px] font-black text-red-400 uppercase tracking-widest">Neural Link Suspended</span>
+            </>
+          ) : (
+            <>
+              <Cpu size={14} className="text-yellow-400" />
+              <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest">Free Flash Gen Active</span>
+            </>
+          )}
         </div>
       </header>
 
-      <div className="glass p-8 rounded-[2.5rem] border-white/5 mb-10">
+      <div className="glass p-8 rounded-[2.5rem] border-white/5 mb-10 relative overflow-hidden">
+        {isOffline && <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-10 flex items-center justify-center">
+            <div className="text-center">
+               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-2">Assembly Line Offline</p>
+               <p className="text-[9px] text-zinc-600 font-mono">LINK API KEY TO UNLOCK DESIGNER</p>
+            </div>
+        </div>}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <input 
               type="text" 
-              placeholder="Design a masterpiece (e.g., 'Cyberpunk drifter with wide body kit')..."
+              placeholder={isOffline ? "Neural Link Required..." : "Design a masterpiece (e.g., 'Cyberpunk drifter with wide body kit')..."}
               className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-yellow-500 shadow-inner text-sm transition-all"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
-              disabled={isGenerating}
+              disabled={isGenerating || isOffline}
             />
             <Sparkles className="absolute right-5 top-1/2 -translate-y-1/2 text-yellow-400/50" size={20} />
           </div>
           <button 
             onClick={handleGenerate}
-            disabled={isGenerating || !prompt}
+            disabled={isGenerating || !prompt || isOffline}
             className="bg-yellow-400 hover:bg-yellow-300 disabled:bg-zinc-800 text-black font-black px-10 py-4 rounded-2xl transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3 min-w-[200px]"
           >
             {isGenerating ? (
@@ -149,13 +166,6 @@ const GarageView: React.FC<GarageViewProps> = ({ cars, addCar, onPlaySFX }) => {
             </div>
           </div>
         ))}
-        {cars.length === 0 && !isGenerating && (
-          <div className="col-span-full py-40 border-2 border-dashed border-zinc-800 rounded-[3rem] flex flex-col items-center justify-center text-zinc-600 bg-black/20">
-            <CarIcon size={64} className="mb-4 opacity-20" />
-            <p className="font-orbitron font-bold text-xl uppercase tracking-[0.3em]">GARAGE VACANT</p>
-            <p className="text-[10px] mt-2 font-mono uppercase opacity-60">Authorize production in the terminal</p>
-          </div>
-        )}
       </div>
     </div>
   );

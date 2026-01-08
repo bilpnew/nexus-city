@@ -14,7 +14,7 @@ import { generateMissionDescription, generateBriefingAudio, generateMissionVideo
 import { 
   Trophy, Wifi, Activity, Terminal as TerminalIcon, 
   Info, Zap, Skull, Bell, Volume2, ShieldAlert, Settings, Sliders, VolumeX,
-  Lock, Key, ExternalLink, Cpu, Gift, Sparkles
+  Lock, Key, ExternalLink, Cpu, Gift, Sparkles, MonitorOff, AlertCircle
 } from 'lucide-react';
 
 const INITIAL_CHARACTERS: Character[] = [
@@ -49,54 +49,6 @@ const INITIAL_CHARACTERS: Character[] = [
     description: 'Former intelligence operative. Specializes in "invisible" entries and exits.',
     imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1000&auto=format&fit=crop',
     stats: { driving: 60, shooting: 75, hacking: 85, strength: 45 }
-  },
-  {
-    id: 'char-5',
-    name: 'Marcus "Brick" Stone',
-    role: 'Heavy Weapons',
-    description: "Walking tank. If a door doesn't open, he makes a new one.",
-    imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1000&auto=format&fit=crop',
-    stats: { driving: 40, shooting: 90, hacking: 10, strength: 98 }
-  },
-  {
-    id: 'char-6',
-    name: 'Elena "Cipher" Vance',
-    role: 'Digital Architect',
-    description: 'PhD in cryptography turned rogue. She sees the world in binary.',
-    imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1000&auto=format&fit=crop',
-    stats: { driving: 50, shooting: 40, hacking: 99, strength: 30 }
-  },
-  {
-    id: 'char-7',
-    name: 'Viktor "The Wolf" Volkov',
-    role: 'Clean-Up Crew',
-    description: 'Specializes in removing evidence and managing "unforeseen complications".',
-    imageUrl: 'https://images.unsplash.com/photo-1488161628813-244768e24692?q=80&w=1000&auto=format&fit=crop',
-    stats: { driving: 75, shooting: 88, hacking: 70, strength: 80 }
-  },
-  {
-    id: 'char-8',
-    name: 'Tessa "Nitro" Bell',
-    role: 'Demolitions',
-    description: 'Loves the smell of thermite in the morning. Everything is a fuse if you try hard enough.',
-    imageUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1000&auto=format&fit=crop',
-    stats: { driving: 65, shooting: 82, hacking: 55, strength: 75 }
-  },
-  {
-    id: 'char-9',
-    name: 'Chen "Echo" Long',
-    role: 'Infiltrator',
-    description: 'A master of social engineering and physical security bypass.',
-    imageUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=1000&auto=format&fit=crop',
-    stats: { driving: 70, shooting: 60, hacking: 88, strength: 55 }
-  },
-  {
-    id: 'char-10',
-    name: 'Rico "The Fixer" Diaz',
-    role: 'Strategy Lead',
-    description: 'The guy who knows a guy. If you need it, he can get it—for a price.',
-    imageUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1000&auto=format&fit=crop',
-    stats: { driving: 80, shooting: 75, hacking: 75, strength: 75 }
   }
 ];
 
@@ -129,6 +81,7 @@ const INITIAL_MISSIONS: Mission[] = [
 
 const App: React.FC = () => {
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [view, setView] = useState<GameView>('dashboard');
   const [characters, setCharacters] = useState<Character[]>(INITIAL_CHARACTERS);
   const [cars, setCars] = useState<Car[]>(INITIAL_CARS);
@@ -137,11 +90,8 @@ const App: React.FC = () => {
   const [level, setLevel] = useState(14);
   const [notoriety, setNotoriety] = useState(1);
   const [logs, setLogs] = useState<string[]>(['[SYSTEM] AUTHENTICATED: NEXUS_ADMIN', '[UPLINK] STABLE']);
-  const [notification, setNotification] = useState<{type: 'success' | 'failure', message: string, title: string} | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [isGeneratingMission, setIsGeneratingMission] = useState(false);
-  const [isBriefing, setIsBriefing] = useState(false);
   
   // Video Replay State
   const [showReplay, setShowReplay] = useState(false);
@@ -151,10 +101,7 @@ const App: React.FC = () => {
 
   // Audio State
   const [masterVolume, setMasterVolume] = useState(0.5);
-  const [ambientActive, setAmbientActive] = useState(false);
-  
   const audioContextRef = useRef<AudioContext | null>(null);
-  const ambientNodesRef = useRef<{osc: OscillatorNode, gain: GainNode}[]>([]);
 
   useEffect(() => {
     const checkKey = async () => {
@@ -172,6 +119,7 @@ const App: React.FC = () => {
     if (typeof window.aistudio !== 'undefined') {
       await window.aistudio.openSelectKey();
       setHasApiKey(true);
+      setIsOfflineMode(false);
     }
   };
 
@@ -249,9 +197,6 @@ const App: React.FC = () => {
     }
   }, [masterVolume]);
 
-  /**
-   * Fix missing mission handlers to enable gameplay loop
-   */
   const handleAcceptMission = useCallback((id: string, characterId: string) => {
     const mission = missions.find(m => m.id === id);
     if (!mission) return;
@@ -300,6 +245,10 @@ const App: React.FC = () => {
   }, [missions, addLog, playSFX, setBalance]);
 
   const handleWatchReplay = useCallback(async (mission: Mission) => {
+    if (isOfflineMode) {
+      addLog("Action replay unavailable in OFFLINE mode.");
+      return;
+    }
     setShowReplay(true);
     setIsGeneratingVideo(true);
     setVideoStatus('Initializing neural link...');
@@ -313,9 +262,13 @@ const App: React.FC = () => {
     } finally {
       setIsGeneratingVideo(false);
     }
-  }, []);
+  }, [isOfflineMode, addLog]);
 
   const handleGenerateMission = useCallback(async (theme: string, type: string, difficulty: string) => {
+    if (isOfflineMode) {
+      addLog("Contract generation requires NEURAL LINK.");
+      return;
+    }
     setIsGeneratingMission(true);
     addLog(`Contracting network for: ${theme}...`);
     try {
@@ -332,7 +285,7 @@ const App: React.FC = () => {
     } finally {
       setIsGeneratingMission(false);
     }
-  }, [addLog]);
+  }, [isOfflineMode, addLog]);
 
   const handleReplayMission = useCallback((id: string) => {
     setMissions(prev => prev.map(m => m.id === id ? { ...m, status: 'available', progress: 0, health: 100 } : m));
@@ -345,25 +298,26 @@ const App: React.FC = () => {
     }
   }, [view, playSFX]);
 
-  if (hasApiKey === false) {
+  // Main UI Logic: Lock screen if no key and NOT in offline mode
+  if (hasApiKey === false && !isOfflineMode) {
     return (
       <div className="h-screen bg-black flex items-center justify-center p-6 text-center bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-900/20 via-black to-black">
         <div className="max-w-md w-full glass p-12 rounded-[3rem] border border-cyan-500/20 shadow-[0_0_100px_rgba(6,182,212,0.15)] relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50" />
           
           <div className="w-24 h-24 bg-zinc-900 rounded-[2rem] border border-white/10 flex items-center justify-center mx-auto mb-8 shadow-2xl">
-            <Sparkles className="text-cyan-400" size={40} />
+            <MonitorOff className="text-red-500" size={40} />
           </div>
           
           <h1 className="text-3xl font-orbitron font-black italic uppercase tracking-tighter mb-4">
-            BEST <span className="text-cyan-400">FREE AI</span> MODE
+            NEURAL LINK <span className="text-red-500">OFFLINE</span>
           </h1>
           
           <p className="text-zinc-400 text-xs font-mono mb-10 uppercase leading-relaxed tracking-wider px-4">
-            Unlock high-fidelity character generation and action replays with your own <span className="text-white font-bold">Free Google AI Key</span>.
+            AI-powered generation and action replays require a Google Gemini Key. You can play with limited features in Offline Mode.
           </p>
           
-          <div className="space-y-6">
+          <div className="space-y-4">
             <button 
               onClick={handleConnect}
               className="w-full bg-cyan-500 text-black py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white transition-all shadow-2xl shadow-cyan-500/30 flex items-center justify-center gap-3 group active:scale-95"
@@ -371,8 +325,15 @@ const App: React.FC = () => {
               <Key size={18} className="group-hover:rotate-12 transition-transform" /> 
               ACTIVATE BEST FREE AI KEY
             </button>
+
+            <button 
+              onClick={() => setIsOfflineMode(true)}
+              className="w-full bg-zinc-900 text-zinc-400 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-zinc-800 transition-all border border-white/5 flex items-center justify-center gap-3 active:scale-95"
+            >
+              <MonitorOff size={18} /> ENTER OFFLINE MODE
+            </button>
             
-            <div className="flex flex-col gap-3">
+            <div className="pt-6 flex flex-col gap-3">
               <a 
                 href="https://aistudio.google.com/app/apikey" 
                 target="_blank" 
@@ -381,22 +342,6 @@ const App: React.FC = () => {
               >
                 Get a Free Key at AI Studio <ExternalLink size={12} />
               </a>
-              <a 
-                href="https://ai.google.dev/gemini-api/docs/billing" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 text-[10px] font-black text-zinc-600 hover:text-white transition-colors uppercase tracking-widest"
-              >
-                Billing Documentation <Info size={12} />
-              </a>
-            </div>
-          </div>
-          
-          <div className="mt-10 pt-8 border-t border-white/5 flex items-center justify-center gap-4 grayscale opacity-40">
-            <Gift size={20} className="text-cyan-400" />
-            <div className="text-[8px] font-mono text-left uppercase tracking-tighter">
-              Nexus Grid Version: 4.2.0-STABLE<br/>
-              Neural Link: Pending Authorization
             </div>
           </div>
         </div>
@@ -431,8 +376,12 @@ const App: React.FC = () => {
                     NEXUS <span className="text-cyan-400">HQ</span>
                   </h1>
                   <div className="flex items-center gap-3 text-zinc-500 text-[10px] font-mono mt-2">
-                    <Wifi size={14} className="text-emerald-500 animate-pulse" />
-                    <span>BEST FREE AI LINK: Sector_01_Node_7</span>
+                    {isOfflineMode ? (
+                      <MonitorOff size={14} className="text-red-500" />
+                    ) : (
+                      <Wifi size={14} className="text-emerald-500 animate-pulse" />
+                    )}
+                    <span>{isOfflineMode ? 'LOCAL_EMULATION_MODE' : 'BEST FREE AI LINK: Sector_01_Node_7'}</span>
                   </div>
                 </div>
                 <div className="glass p-6 rounded-[2rem] border-zinc-800 text-right">
@@ -440,12 +389,24 @@ const App: React.FC = () => {
                   <div className="text-4xl font-orbitron font-black text-emerald-400 italic">${balance.toLocaleString()}</div>
                 </div>
               </header>
+
+              {isOfflineMode && (
+                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {/* Fixed: AlertCircle added to imports above */}
+                    <AlertCircle className="text-red-500" size={18} />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-red-500">Warning: AI Generation features suspended in Offline Mode</span>
+                  </div>
+                  <button onClick={handleConnect} className="text-[10px] font-black underline uppercase text-white hover:text-cyan-400">Link AI Now</button>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {[
                   { label: 'Reputation', val: level, icon: Trophy, color: 'border-cyan-500' },
                   { label: 'Heat', val: notoriety, icon: ShieldAlert, color: 'border-red-500' },
                   { label: 'Assets', val: characters.length + cars.length, icon: Activity, color: 'border-gold' },
-                  { label: 'Flash Gen', val: 'ACTIVE', icon: Cpu, color: 'border-emerald-500' },
+                  { label: 'Neural Link', val: isOfflineMode ? 'SUSPENDED' : 'ACTIVE', icon: Cpu, color: isOfflineMode ? 'border-zinc-800' : 'border-emerald-500' },
                 ].map((card, i) => (
                   <motion.div 
                     whileHover={{ scale: 1.05 }} key={i} 
@@ -457,11 +418,39 @@ const App: React.FC = () => {
                   </motion.div>
                 ))}
               </div>
-              {/* Rest of the views... */}
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 glass p-8 rounded-[2.5rem] bg-black/40 h-[400px] flex flex-col">
+                  <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
+                    <h3 className="font-orbitron font-black text-sm uppercase flex items-center gap-3">
+                      <TerminalIcon size={16} className="text-cyan-400" /> NETWORK_TRAFFIC
+                    </h3>
+                  </div>
+                  <div className="flex-1 overflow-y-auto scrollbar-hide space-y-2 font-mono text-[10px]">
+                    {logs.map((log, i) => (
+                      <div key={i} className={`p-3 rounded-lg bg-black/50 border border-white/5 ${i === 0 ? 'text-cyan-400 border-cyan-500/20' : 'text-zinc-600'}`}>
+                        {log}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="glass p-10 rounded-[2.5rem] bg-black/60 flex flex-col items-center justify-center text-center">
+                  <div className="w-20 h-20 bg-zinc-900 rounded-[1.5rem] flex items-center justify-center mb-6 border border-white/10 shadow-2xl">
+                    <Zap className="text-cyan-400" size={32} />
+                  </div>
+                  <h3 className="font-orbitron font-black text-2xl uppercase mb-6">Operations</h3>
+                  <button 
+                    onClick={() => handleSetView('safehouse')}
+                    className="w-full bg-white text-black py-4 rounded-xl font-black text-xs hover:bg-cyan-400 transition-all uppercase tracking-widest active:scale-95 shadow-xl"
+                  >
+                    Manage Crew
+                  </button>
+                </div>
+              </div>
             </motion.div>
           )}
-          {view === 'safehouse' && <CharacterView characters={characters} addCharacter={addCharacter} onPlaySFX={playSFX} />}
-          {view === 'garage' && <GarageView cars={cars} addCar={addCar} onPlaySFX={playSFX} />}
+          {view === 'safehouse' && <CharacterView characters={characters} addCharacter={addCharacter} onPlaySFX={playSFX} isOffline={isOfflineMode} />}
+          {view === 'garage' && <GarageView cars={cars} addCar={addCar} onPlaySFX={playSFX} isOffline={isOfflineMode} />}
           {view === 'map' && <MapView />}
           {view === 'terminal' && <TerminalView balance={balance} setBalance={setBalance} addLog={addLog} onPlaySFX={playSFX} />}
           {view === 'missions' && (

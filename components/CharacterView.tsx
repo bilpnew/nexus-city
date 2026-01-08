@@ -4,21 +4,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Character } from '../types';
 import { generateCharacterData, generateCharacterImage } from '../services/gemini';
 import StatBar from './StatBar';
-import { Plus, User, Wand2, Loader2, AlertCircle, Sparkles, ShieldCheck } from 'lucide-react';
+import { Plus, User, Wand2, Loader2, AlertCircle, Sparkles, ShieldCheck, MonitorOff } from 'lucide-react';
 
 interface CharacterViewProps {
   characters: Character[];
   addCharacter: (char: Character) => void;
   onPlaySFX?: (type: 'nav' | 'recruit' | 'mission' | 'click') => void;
+  isOffline?: boolean;
 }
 
-const CharacterView: React.FC<CharacterViewProps> = ({ characters, addCharacter, onPlaySFX }) => {
+const CharacterView: React.FC<CharacterViewProps> = ({ characters, addCharacter, onPlaySFX, isOffline }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [status, setStatus] = useState('');
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
+    if (isOffline) return;
     if (!prompt) return;
     setIsGenerating(true);
     setError(null);
@@ -60,28 +62,43 @@ const CharacterView: React.FC<CharacterViewProps> = ({ characters, addCharacter,
           <h2 className="text-4xl font-orbitron font-black italic uppercase tracking-tighter">Syndicate <span className="text-cyan-400">Roster</span></h2>
           <p className="text-zinc-500 text-xs font-mono uppercase mt-2">Elite operatives for high-stakes heists.</p>
         </div>
-        <div className="hidden md:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-xl">
-          <ShieldCheck size={14} className="text-emerald-400" />
-          <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Free Flash Gen Active</span>
+        <div className={`hidden md:flex items-center gap-2 border px-4 py-2 rounded-xl ${isOffline ? 'bg-red-500/10 border-red-500/20' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
+          {isOffline ? (
+            <>
+              <MonitorOff size={14} className="text-red-400" />
+              <span className="text-[10px] font-black text-red-400 uppercase tracking-widest">Neural Link Suspended</span>
+            </>
+          ) : (
+            <>
+              <ShieldCheck size={14} className="text-emerald-400" />
+              <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Free Flash Gen Active</span>
+            </>
+          )}
         </div>
       </header>
 
-      <div className="glass p-8 rounded-[2.5rem] border-white/5 mb-10">
+      <div className="glass p-8 rounded-[2.5rem] border-white/5 mb-10 relative overflow-hidden">
+        {isOffline && <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-10 flex items-center justify-center">
+            <div className="text-center">
+               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-2">Recruitment Module Offline</p>
+               <p className="text-[9px] text-zinc-600 font-mono">LINK API KEY TO UNLOCK GENERATION</p>
+            </div>
+        </div>}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <input 
               type="text" 
-              placeholder="Describe operative (e.g., 'Ex-con hacker who loves neon fashion')..."
+              placeholder={isOffline ? "Neural Link Required..." : "Describe operative (e.g., 'Ex-con hacker who loves neon fashion')..."}
               className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-cyan-500 shadow-inner text-sm transition-all"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              disabled={isGenerating}
+              disabled={isGenerating || isOffline}
             />
             <Sparkles className="absolute right-5 top-1/2 -translate-y-1/2 text-cyan-400/50" size={20} />
           </div>
           <button 
             onClick={handleGenerate}
-            disabled={isGenerating || !prompt}
+            disabled={isGenerating || !prompt || isOffline}
             className="bg-cyan-500 hover:bg-cyan-400 disabled:bg-zinc-800 text-black font-black px-10 py-4 rounded-2xl transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3 min-w-[200px]"
           >
             {isGenerating ? (
