@@ -56,4 +56,4 @@ export interface Mission {
   activeEvent?: TacticalEvent;
 }
 
-export type GameView = 'dashboard' | 'garage' | 'safehouse' | 'map' | 'missions' | 'terminal';
+export type GameView = 'dashboard' | 'safehouse' | 'garage' | 'map' | 'missions' | 'terminal';
